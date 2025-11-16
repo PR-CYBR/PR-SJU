@@ -2,6 +2,9 @@
 // For emergency management and tactical coordination in Puerto Rico
 
 export default {
+  id: "TOCOPS",
+  topBarCenterText: "TOCOPS – Tactical Operations Center",
+  
   grid: {
     columns: 3,
     rows: 3
@@ -26,5 +29,22 @@ export default {
     ["SST CARIBBEAN", "https://www.ospo.noaa.gov/data/sst/contour/caribbean.c.gif"],
     ["TROPICAL MODELS", "https://www.tropicaltidbits.com/analysis/models/gfs/latest/gfs_mslp_pcpn_frzn_atl_1.png"],
     ["WAVE HEIGHT", "https://polar.ncep.noaa.gov/waves/viewer.shtml?-atl-"]
+  ],
+  
+  tileDelay: [
+    60000,  // WX RADAR
+    60000,  // SATELLITE GEOCOLOR
+    60000,  // TROPICAL OUTLOOK
+    60000,  // LIGHTNING PR
+    60000,  // CARIBBEAN SAT
+    60000,  // WIND ANALYSIS
+    60000,  // SST CARIBBEAN
+    60000,  // TROPICAL MODELS
+    0       // WAVE HEIGHT
+  ],
+  
+  rss: [
+    ["https://www.nhc.noaa.gov/index-at.xml", 30],
+    ["https://www.weather.gov/sju/", 60]
   ]
 };

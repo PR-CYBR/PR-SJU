@@ -1978,10 +1978,21 @@ var tileDelay = ${JSON.stringify(
           const module = await import('./' + profilePath);
           const profileConfig = module.default;
           
+          // Validate required fields
+          if (!profileConfig.grid || !profileConfig.menu || !profileConfig.tiles) {
+            throw new Error(`Profile ${profileName} is missing required fields (grid, menu, or tiles)`);
+          }
+          
+          console.log(`Profile ${profileName} config:`, profileConfig);
+          
           // Update dashboard with profile config
           if (profileConfig.grid) {
             window.layout_cols = profileConfig.grid.columns;
             window.layout_rows = profileConfig.grid.rows;
+          }
+          
+          if (profileConfig.topBarCenterText) {
+            window.topBarCenterText = profileConfig.topBarCenterText;
           }
           
           if (profileConfig.menu) {
@@ -1989,10 +2000,37 @@ var tileDelay = ${JSON.stringify(
           }
           
           if (profileConfig.tiles) {
-            window.aIMG = profileConfig.tiles;
+            // Transform tiles format from nested arrays to flat arrays
+            // Profile format: [["Title", "url1", "url2"], ...]
+            // Dashboard format: [["Title", "url1", "url2"], ...]
+            window.aIMG = profileConfig.tiles.map(tile => {
+              // Each tile is already in the correct format
+              return tile;
+            });
           }
           
+          if (profileConfig.tileDelay) {
+            window.tileDelay = profileConfig.tileDelay;
+          } else {
+            // Default to 60000ms (60s) for all tiles if not specified
+            const numTiles = profileConfig.grid.columns * profileConfig.grid.rows;
+            window.tileDelay = new Array(numTiles).fill(60000);
+          }
+          
+          if (profileConfig.rss) {
+            window.aRSS = profileConfig.rss;
+          } else {
+            window.aRSS = [];
+          }
+          
+          // Set the settings source
+          window.curSettingsSrc = `Profile: ${profileName}`;
+          
           console.log(`Profile ${profileName} loaded successfully`);
+          console.log(`  Grid: ${window.layout_cols}x${window.layout_rows}`);
+          console.log(`  Tiles: ${window.aIMG.length}`);
+          console.log(`  Menu items: ${window.aURL.length}`);
+          console.log(`  Tile delays: ${window.tileDelay.length}`);
           
           // Save the selected profile to localStorage
           localStorage.setItem('selectedProfile', profileName);
@@ -2001,7 +2039,8 @@ var tileDelay = ${JSON.stringify(
           start();
         } catch (error) {
           console.error(`Failed to load profile ${profileName}:`, error);
-          alert(`Failed to load profile ${profileName}. Using default config.`);
+          console.error(`Error details:`, error.stack);
+          alert(`Failed to load profile ${profileName}. Using default config.\n\nError: ${error.message}`);
         }
       }
 

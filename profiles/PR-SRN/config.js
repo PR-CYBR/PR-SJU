@@ -2,6 +2,9 @@
 // VHF/UHF operations and repeater monitoring
 
 export default {
+  id: "PR-SRN",
+  topBarCenterText: "PR-SRN – San Juan Radio Network",
+  
   grid: {
     columns: 3,
     rows: 3
@@ -26,5 +29,22 @@ export default {
     ["ISS POSITION", "https://www.heavens-above.com/orbitdisplay.aspx?icon=iss&width=600&height=300&mode=M&satid=25544"],
     ["LIGHTNING", "https://images.lightningmaps.org/blitzortung/america/index.php?animation=usa"],
     ["BAND OPENINGS", "https://www.vhfdx.net/"]
+  ],
+  
+  tileDelay: [
+    0,      // APRS PR - no rotation
+    60000,  // SOLAR
+    60000,  // VHF CONDITIONS
+    60000,  // AURORA
+    60000,  // RADAR
+    60000,  // SATELLITE
+    60000,  // ISS POSITION
+    60000,  // LIGHTNING
+    0       // BAND OPENINGS
+  ],
+  
+  rss: [
+    ["https://www.amsat.org/feed/", 60],
+    ["https://www.arrl.org/news/rss", 90]
   ]
 };

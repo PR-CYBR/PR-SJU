@@ -2,6 +2,9 @@
 // CIV-DASH - Civilian Dashboard for Puerto Rico San Juan Division
 
 export default {
+  id: "PR-SJU",
+  topBarCenterText: "PR-SJU – CIV-DASH",
+  
   grid: {
     columns: 3,
     rows: 3
@@ -53,5 +56,23 @@ export default {
     ["Lightning/Storm Awareness", 
      "https://images.lightningmaps.org/blitzortung/america/index.php?animation=usa",
      "iframe|https://www.lightningmaps.org/realtime?lang=en#m=oss;t=3;s=0;o=0;b=;ts=0;y=18.2208;x=-66.5901;z=8;d=2;dl=2;dc=0;"]
+  ],
+  
+  tileDelay: [
+    60000,  // Tile 1: PR Radar - 60s refresh
+    60000,  // Tile 2: Local Radar - 60s refresh
+    60000,  // Tile 3: Satellite CGL - 60s refresh
+    0,      // Tile 4: ADS-B iframe - no rotation
+    60000,  // Tile 5: HF Propagation - 60s refresh
+    60000,  // Tile 6: Satellite Tracker - 60s refresh
+    0,      // Tile 7: Moon Phase - no rotation needed
+    0,      // Tile 8: AIS iframe - no rotation
+    60000   // Tile 9: Lightning - 60s refresh
+  ],
+  
+  rss: [
+    ["https://www.amsat.org/feed/", 60],
+    ["https://daily.hamweekly.com/atom.xml", 120],
+    ["https://www.arrl.org/news/rss", 90]
   ]
 };

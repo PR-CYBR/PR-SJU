@@ -2,6 +2,9 @@
 // Mesh networking, LoRa, and alternative communications
 
 export default {
+  id: "PR-M3SH",
+  topBarCenterText: "PR-M3SH – Mesh Network Operations",
+  
   grid: {
     columns: 3,
     rows: 3
@@ -26,5 +29,22 @@ export default {
     ["RADAR", "https://radar.weather.gov/ridge/standard/TJUA_loop.gif"],
     ["GRAY LINE", "https://www.timeanddate.com/scripts/sunmap.php?iso=now"],
     ["BAND CONDITIONS", "https://www.hamqsl.com/solar100sc.php"]
+  ],
+  
+  tileDelay: [
+    60000,  // HF PROPAGATION
+    60000,  // SOLAR
+    60000,  // D-REGION
+    0,      // WSPR
+    0,      // APRS PR
+    60000,  // SATELLITE
+    60000,  // RADAR
+    60000,  // GRAY LINE
+    60000   // BAND CONDITIONS
+  ],
+  
+  rss: [
+    ["https://www.amsat.org/feed/", 60],
+    ["https://daily.hamweekly.com/atom.xml", 120]
   ]
 };
