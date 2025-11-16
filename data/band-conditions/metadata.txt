@@ -1,0 +1,4 @@
+url: https://www.hamqsl.com/solar100sc.php
+content_type: image/gif
+size: 3545
+hash: 636b1d82ce984ae2a517fff59d579417f3a7313ce1072b90d6d5db6107c9b4d8

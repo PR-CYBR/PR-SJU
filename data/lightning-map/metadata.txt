@@ -1,0 +1,4 @@
+url: https://map.blitzortung.org/#3.5/18.2/-66.5
+content_type: text/html; charset=utf-8
+size: 23563
+hash: da593d4a232f032a2d3e59f273b9284ef30d50ff4fbd176412a63fe2aec704d3

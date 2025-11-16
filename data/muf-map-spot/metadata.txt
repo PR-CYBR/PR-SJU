@@ -1,0 +1,4 @@
+url: https://prop.kc2g.com/renders/current/mufd-normal-now.svg
+content_type: image/svg+xml
+size: 378718
+hash: 08c057b9da60d6f4a3605431341a12d7187d23316c8126d84fb5ccfc3034c023

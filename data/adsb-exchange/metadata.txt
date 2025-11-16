@@ -1,0 +1,4 @@
+url: https://globe.adsbexchange.com/?lat=18.2&lon=-66.5&zoom=8.0
+content_type: text/html
+size: 105229
+hash: e1d434688c93d5d98a00cb7522f0bdd73f9bba840a3af0e30402ff92d0e3edf0

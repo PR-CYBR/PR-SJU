@@ -1,0 +1,4 @@
+url: https://www.hamqsl.com/solar101vhf.php
+content_type: image/gif
+size: 7255
+hash: 6ef391092e5f75b4dad01f6176b23f5e48e73cf9eab6895cf45e669c552be9a6

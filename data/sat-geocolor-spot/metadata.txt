@@ -1,0 +1,4 @@
+url: https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/pr/GEOCOLOR/1200x1200.jpg
+content_type: image/jpeg
+size: 1010779
+hash: 975ce7c280c25003d1a9b22b2dfb767ca5e70fd12dba295f747e6b786d1ab213

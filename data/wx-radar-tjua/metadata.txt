@@ -1,0 +1,4 @@
+url: https://radar.weather.gov/ridge/standard/TJUA_loop.gif
+content_type: image/gif
+size: 183050
+hash: 936c733df15d1bafcdf223adc2869183502fe005c2020cfb626e1ea6bb5d8691

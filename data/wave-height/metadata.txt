@@ -1,0 +1,4 @@
+url: https://polar.ncep.noaa.gov/waves/latest_run/multi_1.atl_10m.png
+content_type: text/html; charset=utf-8
+size: 404
+hash: fe649a15202c2280e81a2e478d8223f4f386e8fbaf0263c342b15a3725edd8b7

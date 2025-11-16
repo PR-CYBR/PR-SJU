@@ -1,0 +1,4 @@
+url: https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg
+content_type: image/jpeg
+size: 258385
+hash: 7afc8cd6497249d8d9a7893e442d91fc08383563cbe20cd5af82a0e35a226fcf

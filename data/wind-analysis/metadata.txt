@@ -1,0 +1,4 @@
+url: https://www.ssd.noaa.gov/goes/floater/data/car/latest_car_avn.jpg
+content_type: text/html; charset=utf-8
+size: 30497
+hash: a88d130dc106874d9c919397e2df8b9c7cfb9e4b40abf87956fd83f974ccfd6d

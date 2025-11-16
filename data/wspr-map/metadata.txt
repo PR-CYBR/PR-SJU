@@ -1,0 +1,4 @@
+url: https://www.wsprnet.org/drupal/wsprnet/map
+content_type: text/html; charset=utf-8
+size: 88334
+hash: 9f355b29a55b81df2feda71ba64ebb1efbe70f6d9ab1fb65233ad2d3ce21b341

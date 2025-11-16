@@ -1,0 +1,4 @@
+url: https://www.hamqsl.com/solarpic.php
+content_type: image/gif
+size: 12975
+hash: 3c8eb7528d1d8002ce49f5d4521558f718d65b7a22a7e4d2bbd8bfa22049ce56

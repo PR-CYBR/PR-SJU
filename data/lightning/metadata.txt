@@ -1,0 +1,4 @@
+url: https://images.lightningmaps.org/blitzortung/america/index.php?animation=usa
+content_type: image/gif
+size: 572253
+hash: 879fe9a4ee63668911534d0761f9251f14ecd3ab7631c711120df8e331549f16

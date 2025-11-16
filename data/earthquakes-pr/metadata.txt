@@ -1,0 +1,4 @@
+url: https://earthquake.usgs.gov/earthquakes/map/?extent=16.8,-68.5&extent=19.5,-64.5
+content_type: text/html
+size: 29609
+hash: 57d1c1cb197d57ec43d30e33a81c2b0bc00caa42e07b14697aed9aea2ea2d195

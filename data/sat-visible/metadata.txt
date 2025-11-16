@@ -1,0 +1,4 @@
+url: https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/pr/01/1200x1200.jpg
+content_type: image/jpeg
+size: 581002
+hash: 5f5ea49112d0be0b636807bb7595a1ba015360219602568f06bb8621ea788ea2

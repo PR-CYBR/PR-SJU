@@ -1,0 +1,4 @@
+url: https://services.swpc.noaa.gov/images/animations/d-rap/global/d-rap/latest.png
+content_type: image/png
+size: 21929
+hash: 01ccce6f7cc976091c13feb9e60008d66811b187c296c0859215905ab4eea5c9

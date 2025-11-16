@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html ng-app='aprsfi'>
+<head>
+<!--
+ This is not open source.
+ (c) Heikki Hannikainen and GainIO Oy.
+ Read and learn freely. Do not steal. Thanks!
+
+
+
+ PROGRAMMERS NOTE: https://aprs.fi/page/tos item 6.
+
+
+
+-->
+
+<title>aprs.fi – live APRS map</title>
+<meta name="lang" content="en" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name='apple-itunes-app' content='app-id=922155038, affiliate-data=at=1000la28'>
+
+
+<script type='text/javascript'>
+window.google_analytics_uacct = 'UA-84382-11';
+var _ga_start = new Date();
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount','UA-84382-11']);
+_gaq.push(['_setCustomVar',1,'User class','unregistered',1]);
+_gaq.push(['_setAllowAnchor',true],['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+
+<script type='text/JavaScript'>
+//<![CDATA[
+if (parent.frames.length && location.href.toLowerCase().indexOf("http://translate.google") != 0)
+	top.location.href = document.location;
+//]]>
+</script>
+
+
+<script type='text/javascript'>
+var googletag = googletag || {};
+googletag.cmd = googletag.cmd || [];
+(function() {
+var gads = document.createElement('script');
+gads.async = true;
+gads.type = 'text/javascript';
+var useSSL = 'https:' == document.location.protocol;
+gads.src = (useSSL ? 'https:' : 'http:') + 
+'//www.googletagservices.com/tag/js/gpt.js';
+var node = document.getElementsByTagName('script')[0];
+node.parentNode.insertBefore(gads, node);
+})();
+</script>
+
+<script type='text/javascript'>
+googletag.cmd.push(function() {
+googletag.defineSlot('/2637906/aprs-map-bottom', [250, 250], 'div-gpt-ad-1356108158202-0').addService(googletag.pubads());
+googletag.defineSlot('/2637906/aprs-map-top', [234, 60], 'div-gpt-ad-1356108158202-1').addService(googletag.pubads());
+googletag.defineSlot('/2637906/aprs-info-banner-top', [728, 90], 'div-gpt-ad-1356296834922-0').addService(googletag.pubads());
+googletag.defineSlot('/2637906/aprs-info-banner-bottom', [728, 90], 'div-gpt-ad-1356296727404-0').addService(googletag.pubads());
+googletag.pubads().enableSingleRequest();
+googletag.enableServices();
+});
+</script>
+
+
+
+<link rel="stylesheet" href="/css/ext/bootstrap.min.css">
+<link rel="stylesheet" href="/css/ext/bootstrap-reboot.min.css">
+
+<link rel="stylesheet" type="text/css" href="/css/1706431619/maps.css" />
+<link rel="stylesheet" type="text/css" href="/css/1706431618/map_common.css" />
+<link rel="stylesheet" type="text/css" href="/css/1511723608/calendar.css" />
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="/js/ext/bootstrap.min.js"></script>
+<script type="text/JavaScript" src="/js/ext/1598176963/transform.js"></script>
+
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<link rel="shortcut" href="/favicon.ico" type="image/x-icon" />
+<link rel="apple-touch-startup-image" href="/img/aprsfi-appleloading.png" />
+<link rel="apple-touch-icon" sizes="120x120" href="/img/aprsfi-square-120.png" />
+<link rel="apple-touch-icon" sizes="152x152" href="/img/aprsfi-square-152.png" />
+<link rel="apple-touch-icon" sizes="167x167" href="/img/aprsfi-square-167.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/img/aprsfi-square-180.png" />
+<link rel="apple-touch-icon" sizes="256x256" href="/img/aprsfi-square-256.png" />
+<link rel="apple-touch-icon" sizes="512x512" href="/img/aprsfi-square-512.png" />
+<link rel="apple-touch-icon" sizes="1024x1024" href="/img/aprsfi-square-1024.png" />
+<meta property="og:image" content="/img/aprsfi-square-512.png" />
+<meta property="og:image:width" content="512" />
+<meta property="og:image:height" content="512" />
+<link rel="search" type="application/opensearchdescription+xml" title="Search aprs.fi" href="/w3c/opensearch.xml" />
+</head>
+<body style="background-color: #fff;" class="common" ng-controller="aprsfic">
+
+
+<div id="popup_cont" class="popup_container" style="display: none; z-index: 1060;">
+	<div id="popup_handle" class="popup_handle">
+		<div id="popup_buttons" class="popup_buttons"><img src="/img/close.gif" width="16" height="16" class="popup_closeicon" id="popup_closeicon" alt="close" onmousedown="popup_hide('popup');" /></div>
+		<div id="popup_title" class="popup_title">t</div>
+	</div>
+	<div id="popup_content" class="popup_content popup_text"></div>
+</div>
+
+<div id="ttip" class="ttip"></div>
+
+
+<div id="options_cont" class="popup_container" style="display: none; z-index: 1010; width: 495px;">
+	<div id="options_handle" class="popup_handle">
+		<div id="options_buttons" class="popup_buttons"><img src="/img/close.gif" width="16" height="16" class="popup_closeicon" id="options_closeicon" alt="close" onmousedown="popup_hide('options');" /></div>
+		<div id="options_title" class="popup_title">Preferences</div>
+	</div>
+	<div id="options_content" class="popup_content"></div>
+</div>
+
+<div id="secondview_cont" class="popup_container" style="display: none; z-index: 1020; width: 600px;">
+	<div id="secondview_handle" class="popup_handle">
+		<div class="popup_buttons"><img src="/img/close.gif" width="16" height="16" class="popup_closeicon" id="popup_closeicon" alt="close" onmousedown="popup_hide('secondview');" /></div>
+		<div id="secondview_title" class="popup_title">t</div>
+	</div>
+	<div class="popup_content">
+		<div id="secondview_content" class="popup_content_scroll">
+		</div>
+	</div>
+</div>
+
+<div id="contextmenu" class="track_menu" style="display: block; z-index:1005; visibility: hidden; position: absolute;">
+	<div class="track_menu_item" onclick="contextmenu_map_center()">Center map here</div>
+	
+	<div class="track_menu_item" onclick="contextmenu_my_pos()">Upload my position</div>
+	<div class="track_menu_item" onclick="contextmenu_add_marker()">Add marker</div>
+</div>
+
+<div id="panel_left" style="height: 100%; min-height: 200px; margin-right: 300px;">
+<div style='position: relative; overflow-x: hidden; overflow-y: hidden; height: 100%;' >
+<div id="sv"></div>
+<div id="map"></div>
+</div>
+
+</div>
+
+<div class="divpanel_small" id="smallpanel" style="visibility: hidden;">
+<div style='background-position: 0 -288px; float: right; margin: 1px 1px 1px 0px;' onclick='right_hide()' onmouseover='ttip(event, this, "Hide or unhide the navigation bar")'></div>
+<div style='background-position: 0 -0px; float: right; clear:right; margin: 1px 1px 0px 0;' onclick='fav_home()' onmouseover='ttip(event, this, "Go back to default view")'></div>
+<div id='i_cent_s' style='background-position: 0 -128px; float: right; clear:right; margin: 1px 1px 0px 0;' onclick='loc_center()' onmouseover='ttip(event, this, "Center at current location")'></div>
+<div id='i_share_s' style='background-position: 0 -32px; float: right; clear:right; margin: 1px 1px 0px 0;' onclick='loc_share()' onmouseover='ttip(event, this, "Share current location on aprs.fi")'></div>
+<div style='background-position: 0 -320px; float: right; clear:right; margin: 10px 1px 0px 0px;' onclick='fav_popup(event)' onmouseover='ttip(event, this, "Favourites")'></div>
+<div style='background-position: 0 -96px; float: right; clear:right; margin: 1px 1px 0px 0px;' onclick='filt_popup(event)' onmouseover='ttip(event, this, "Filter")'></div>
+<div id='i_phg_s' style='background-position: 0 -192px; float: right; clear:right; margin: 10px 1px 0px 0px;' onclick='toggle_phg()' onmouseover='ttip(event, this, "Toggle between half-sized and full-sized PHG circles")'></div>
+<div id='i_ruler_s' style='background-position: 0 -160px; float: right; clear:right; margin: 1px 1px 0px 0px;' onclick='toggle_ruler()' onmouseover='ttip(event, this, "Ruler tool - measures distance and direction")'></div>
+</div>
+
+<div class="divpanel" id="panel" onclick="hide_popups()">
+<div class="divpanel_btns">
+<div style='background-position: 0 -256px; margin: 1px -3px 2px 3px;' onclick='right_hide()' onmouseover='ttip(event, this, "Hide or unhide the navigation bar")'></div>
+<div style='background-position: 0 -0px; margin: 1px -3px 1px 3px;' onclick='fav_home()' onmouseover='ttip(event, this, "Go back to default view")'></div>
+<div id='i_cent_r' style='background-position: 0 -128px; margin: 1px -3px 1px 3px;' onclick='loc_center()' onmouseover='ttip(event, this, "Center at current location")'></div>
+<div id='i_share_r' style='background-position: 0 -32px; width: 32px; height: 32px; margin: 1px -3px 1px 3px;' onclick='loc_share()' onmouseover='ttip(event, this, "Share current location on aprs.fi")'></div>
+<div style='background-position: 0 -320px; margin: 10px -3px 1px 3px;' onclick='fav_popup(event)' onmouseover='ttip(event, this, "Favourites")'></div>
+<div style='background-position: 0 -96px; margin: 1px -3px 1px 3px;' onclick='filt_popup(event)' onmouseover='ttip(event, this, "Filter")'></div>
+<div id='i_phg_r' style='background-position: 0 -192px; margin: 10px -3px 1px 3px;' onclick='toggle_phg()' onmouseover='ttip(event, this, "Toggle between half-sized and full-sized PHG circles")'></div>
+<div id='i_ruler_r' style='background-position: 0 -160px; margin: 1px -3px 1px 3px;' onclick='toggle_ruler()' onmouseover='ttip(event, this, "Ruler tool - measures distance and direction")'></div>
+</div>
+
+<b>aprs.fi</b>  · <a href="https://aprs.fi/?c=login">Login</a>
+
+<div id="status"></div>
+<div id="ad_top"><!-- aprs-map-top -->
+<div id='div-gpt-ad-1356108158202-1' style='width:234px; height:60px; margin-top: 5px;'>
+<script type='text/javascript'>
+googletag.cmd.push(function() {
+googletag.display('div-gpt-ad-1356108158202-1'); });
+</script>
+</div>
+</div>
+
+<div id="view_control"></div>
+
+
+<form method="get" action="/" onsubmit="return search_submit(event, 'call')" style="margin: 0px; padding: 0px;">
+<div style='margin-top: 8px;'>
+<label class='search' for="call">Track callsign:</label>
+<a class='link' onclick='goto_clean_current()'>Clear</a><br />
+<input class='in' name="call" id="call" value="" size="16" maxlength="160" />
+<button type="submit" class='button button_default button_medium'>Search</button>
+<a class='link' onclick='help_popup("search_call", "Callsign / target search")'>?</a>
+</div>
+</form>
+
+<form method="get" action="/" onsubmit="return search_submit(event, 'addr')" style="margin: 0px; padding: 0px;">
+<div style='margin-top: 5px;'>
+<label class='search' for="addr">Address, city or Locator:</label>
+<a class='link' onclick='goto_clean_current()'>Clear</a><br />
+<input class='in' name="addr" id="addr" value="" size="16" maxlength="50" />
+<button type="submit" class='button button_default button_medium'>Search</button>
+<a class='link' onclick='help_popup("search_addr", "Address search")'>?</a>
+</div>
+</form>
+
+<div style='margin-top: 5px;'>
+<label class='search' for="timerange">Show last:</label><br />
+<select name="timerange" id="timerange" onchange="timerange_apply(0)">
+<option value="900">15 minutes</option>
+<option value="1800">30 minutes</option>
+<option value="3600">1 hour</option>
+<option value="10800">3 hours</option>
+<option value="21600">6 hours</option>
+<option value="43200">12 hours</option>
+<option value="86400">24 hours</option>
+<option value="172800">2 days</option>
+<option value="259200">3 days</option>
+<option value="345600">4 days</option>
+<option value="432000">5 days</option>
+<option value="518400">6 days</option>
+<option value="604800">7 days</option>
+</select>
+
+<input class="button button_default button_medium" id="show_all" style="margin-top: 1px;" onclick='show_others_toggle()' value="Show all" type="submit" />
+
+<br />
+<label class='search' for="tail">Track tail length:</label><br />
+<select name="tail" id="tail" onchange="timerange_apply(1)">
+<option value="0">No tail</option>
+<option value="900">15 minutes</option>
+<option value="1800">30 minutes</option>
+<option value="3600">1 hour</option>
+<option value="10800">3 hours</option>
+<option value="21600">6 hours</option>
+<option value="43200">12 hours</option>
+<option value="86400">24 hours</option>
+<option value="172800">2 days</option>
+<option value="259200">3 days</option>
+<option value="345600">4 days</option>
+<option value="432000">5 days</option>
+<option value="518400">6 days</option>
+<option value="604800">7 days</option>
+</select>
+
+</div>
+
+<span id="info"></span>
+<span id="daterange_info"></span>
+<span id="datebrowse"></span>
+<span id="area_wx"></span>
+
+<div class='panelblock'>
+<b>Other views:</b><br />
+<div id='viewlinks'></div>
+<ul class='viewlinks' style='margin-top: 0px;'>
+<li><a href='/browse/'>Prefix browsing</a></li>
+<li><a class='link' onclick='goto_kml()'>Google Earth KML</a>
+<a class='link' onclick='help_popup("goto_kml", "Google Earth KML")'>?</a></li>
+<li><a href='/export/'>Data export tool</a></li>
+<li><a class='link' onclick='options_popup()'>Preferences</a> - <a rel='nofollow' href='https://aprs.fi/account/'>My account</a></li>
+</ul>
+</div>
+
+<div class='panelblock'>
+<b>Information:</b><br />
+<span style='vertical-align: middle;'>
+<a href="/moving/">Stations currently moving</a>
+· <a href='https://aprs.fi/doc/guide/guide.html'>User guide</a>
+· <a href='/page/faq'>FAQ</a>
+· <a href='http://blog.aprs.fi/'>Blog</a>
+· <a href='https://groups.google.com/forum/#!forum/aprsfi'>Discussion group</a>
+· <a href='/page/linking'>Linking to aprs.fi</a>
+· <a href='/page/ais_sites'>AIS sites</a>
+· <a href='/service-status/'>Service status</a>
+· <a href='/stats/daily'>Database statistics</a>
+· <a href='/page/advertising'>Advertising on aprs.fi</a>
+· <a href='/page/about_technical'>Technical details</a>
+· <a href='/page/api'>API</a>
+· <a href='/page/changelog'>Change log</a>
+· <a href='/page/todo'>Planned changes</a>
+· <a href='/page/credits'>Credits and thanks</a>
+· <a href='/page/tos'>Terms Of Service</a>
+· <a href='https://geo.itunes.apple.com/app/aprs.fi/id922155038?mt=8&at=1000la28&pt=2223203&ct=aprsfi'>iPhone/iPad APRS</a>
+
+</span>
+</div>
+
+<div class='panelblock' id='js_status'></div>
+<div style='height: 7px;'></div>
+<a class="twitter-timeline" width="260" height="300" data-dnt="true"
+href="https://twitter.com/aprsfi" data-widget-id="502680674071887872">Tweets by @aprsfi</a><script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+<!-- iframe src="http://www.facebook.com/plugins/likebox.php?href=http%3A%2F%2Fwww.facebook.com%2Fpages%2Faprsfi%2F44083939067&amp;width=263&amp;colorscheme=light&amp;show_faces=false&amp;stream=false&amp;header=true&amp;height=427" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:263px; height:427px;" allowTransparency="true"></iframe -->
+
+
+</div>
+
+<div id='mloading'>
+<div>loading...</div>
+<img src='/img/aprsfi-logo-mid-tr.png' width='200' height='133' />
+</div>
+
+<script type='text/JavaScript'>
+//<![CDATA[
+analytics = 1;
+cookie_domain = 'aprs.fi';
+settings_cookie = 'mapssettings';
+//]]>
+</script>
+<script type="text/JavaScript" src="/js/en/1706431613/lib.js"></script><script type='text/JavaScript'>
+//<![CDATA[
+sett(1763316581)//]]>
+</script>
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script><script type='text/JavaScript'>
+//<![CDATA[
+is_logged_in = 0;
+has_rx = 0;
+leaflet_tile_url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+static_url1 = '';
+static_url2 = '';
+symbol_ver = '/s2/';
+js_paths = {"deferred_gmap":"\/js\/en\/1728671101\/deferred_gmap.js","deferred_leaflet":"\/js\/en\/1713470894\/deferred_leaflet.js","deferred_nonmob_gmap":"\/js\/en\/1706431616\/deferred_nonmob_gmap.js","deferred_nonmob_leaflet":"\/js\/en\/1706431616\/deferred_nonmob_leaflet.js","sm":"\/js\/en\/1510041170\/sm.js","maphilight":"\/js\/en\/1511723397\/maphilight.js","timezone-picker":"\/js\/en\/1511723398\/timezone-picker.js"};
+base_uri = '/';
+max_zoom = 8;
+winid = 'QmTwLflD';
+ufid = '0';
+//]]>
+</script>
+<script type="text/JavaScript" src="/js/en/1728671101/constants.js"></script><script type="text/JavaScript" src="/js/en/1511723396/usng.js"></script><script type="text/JavaScript" src="/js/en/1557004607/date.js"></script><script type="text/JavaScript" src="/js/en/1728671101/maps_leaflet.js"></script><script type="text/JavaScript" src="/js/en/1510041170/calendar.js"></script><script type='text/JavaScript'>
+//<![CDATA[
+home_u = 'lat=41.1446&lng=-104.8116'
+nick = '';
+csrf = 'v-,gPuz7sQla';
+units = 'imperial';
+coords = 'a';
+loc = 'm';
+units_temp = 'F';
+tz_guessed = 'America/Denver';
+tz_used = 'America/Denver';
+show_track = 'w';
+snd = '0';
+snd_t = '0';
+ibco = 0;
+ibad = 0;
+ibsp = 1;
+ibph = 1;
+ibcm = 1;
+ibpa = 1;
+line_colors = new Array('ff3000','00ff00','0000ff','ff00ff','00ffff');
+line_width = 5;
+country='US';
+//]]>
+</script>
+
+<script type="text/JavaScript">
+$(window).on("load", load);
+</script>
+
+
+</body>
+</html>

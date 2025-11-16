@@ -1,0 +1,4 @@
+url: https://www.swpc.noaa.gov/products/station-k-and-indices
+content_type: text/html; charset=utf-8
+size: 73708
+hash: 67606548b7046484cb830f176c3eb15ca9415a9fd07b812f1df64ffa8c97467b

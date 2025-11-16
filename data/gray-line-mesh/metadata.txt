@@ -1,0 +1,4 @@
+url: https://www.timeanddate.com/scripts/sunmap.php?iso=now
+content_type: image/jpeg
+size: 66803
+hash: 00e5c64abe804206eb3bfb9b511a6255b0fbcf03d3be9c355a5eac908ac33781

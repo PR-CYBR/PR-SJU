@@ -1,0 +1,4 @@
+url: https://firms.modaps.eosdis.nasa.gov/map/
+content_type: text/html
+size: 6178
+hash: 3a75cd1ae8e2b73b205f0966b082538f27d29f73259b1f0102f1cd92ba52c732
