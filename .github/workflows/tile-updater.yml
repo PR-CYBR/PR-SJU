@@ -5,6 +5,9 @@ on:
     types: [bundles-ready]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-tiles:
     name: Update Dashboard Tiles
@@ -71,13 +74,23 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
+          # Check if tile-data branch exists, create if not
+          if git ls-remote --heads origin tile-data | grep tile-data; then
+            echo "tile-data branch exists, checking it out..."
+            git fetch origin tile-data
+            git checkout tile-data
+          else
+            echo "tile-data branch does not exist, creating it..."
+            git checkout -b tile-data
+          fi
+          
           git add docs/backlog.md tile_summary.md || true
           
           if git diff --staged --quiet; then
             echo "No documentation changes to commit"
           else
             git commit -m "Update dashboard documentation [automated]"
-            git push
+            git push origin tile-data
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

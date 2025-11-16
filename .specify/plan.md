@@ -174,26 +174,37 @@ Create new task files in `.specify/tasks/` following this template:
   - [x] Fetch tile data
   - [x] Store in /data/ directory
   - [x] Generate metadata
+  - [x] Add permissions block (`contents: write`)
+  - [x] Configure to push only to `tile-data` branch
+  - [x] Auto-create `tile-data` branch if needed
 - [x] Create `tile-loader.yml` workflow
   - [x] Process tile data
   - [x] Create JSON bundles
   - [x] Copy images to assets
   - [x] Trigger tile-updater
+  - [x] Add permissions block (`contents: write`)
+  - [x] Configure to push only to `tile-data` branch
+  - [x] Auto-create `tile-data` branch if needed
 - [x] Create `tile-updater.yml` workflow
   - [x] Update documentation
   - [x] Generate backlog
   - [x] Post notifications
   - [x] Maintain status reports
+  - [x] Add permissions block (`contents: write`)
+  - [x] Configure to push only to `tile-data` branch
+  - [x] Auto-create `tile-data` branch if needed
 
 ### Phase 6: GitHub Pages Deployment
 **Status**: ✅ Complete
 
 - [x] Create `pages-deploy.yml` workflow
-- [x] Configure deployment from prod branch
-- [x] Copy dashboard files to `_site/`
+- [x] Configure deployment from prod branch to pages branch
+- [x] Copy dashboard files from `/dash/` to pages branch root
+- [x] Clear pages branch before deployment
+- [x] Add proper permissions (`contents: write`)
 - [x] Include profile configurations
 - [x] Add 404 page
-- [x] Setup GitHub Pages environment
+- [x] Setup direct branch deployment (not using GitHub Pages action)
 
 ### Phase 7: Documentation
 **Status**: ✅ Complete
@@ -259,9 +270,16 @@ dev → main → test → stage → prod → pages
    - Monitor tile automation
 
 6. **GitHub Pages** (pages branch)
-   - Static site generation
-   - Asset optimization
-   - CDN deployment
+   - Dashboard files deployed from `/dash/` to root
+   - Static site served at https://pr-cybr.github.io/PR-SJU/
+   - Profile configurations included
+   - Automated deployment on prod branch push
+
+7. **Tile Data** (tile-data branch)
+   - Isolated branch for tile automation workflows
+   - Receives tile data, bundles, and documentation
+   - Prevents conflicts with protected branches
+   - Continuous updates without affecting main codebase
 
 ## Agent Interaction Requirements
 
