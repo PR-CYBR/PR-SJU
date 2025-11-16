@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - prod
+      - main
   workflow_dispatch:
 
 permissions:
@@ -23,8 +23,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: prod
-          fetch-depth: 0
+main: prod
+       mainfetch-depth: 0
           
       - name: Create _site directory
         run: |
@@ -64,7 +64,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: prod
+          ref: main
           fetch-depth: 0
           
       - name: Download _site artifact
