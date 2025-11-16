@@ -251,39 +251,135 @@ spec → plan → impl → dev → main → stage → prod → pages
        codex ───────────────────────────────────→ pages
 ```
 
-## 🌐 GitHub Pages Deployment
+## 🌐 COA-1: Multi-Branch CI/CD Deployment Pipeline
 
-The PR-SJU Dashboard is automatically deployed to GitHub Pages using a multi-stage workflow system.
+The PR-SJU Dashboard implements **COA-1** (Course of Action 1), a complete, fully automated, multi-branch Spec-Kit deployment pipeline with tile-data isolation and Docker compatibility.
+
+### Architecture Overview
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                  Multi-Branch CI/CD Flow                  │
+├──────────────────────────────────────────────────────────┤
+│                                                           │
+│  spec → plan → impl → dev → main → stage → prod → pages │
+│           ↓                    ↑                          │
+│         design ────────────────┘                          │
+│         codex ─────────────────────────────────────→ pages│
+│                                                           │
+│  tile-data (isolated) ─────────── NEVER touches prod     │
+│                                                           │
+└──────────────────────────────────────────────────────────┘
+```
 
 ### Deployment Flow
 
-1. **Dashboard Build (dash-build.yml)** - Triggered on changes to:
-   - `/dash/**` - Dashboard files
-   - `/profiles/**` - Profile configurations
-   - `/sources/**` - Tile source definitions
-   
-   This workflow:
-   - Copies dashboard files to `_site/` directory
-   - Validates HTML structure and profile configurations
-   - Ensures proper relative paths for GitHub Pages
-   - Uploads `_site` as an artifact for deployment
+#### 1. **Dashboard Build (dash-build.yml)**
+Triggered on changes to:
+- `/dash/**` - Dashboard files
+- `/profiles/**` - Profile configurations  
+- `/sources/**` - Tile source definitions
+- Branches: `dev`, `main`, `prod`
 
-2. **Pages Trigger (pages-trigger.yml)** - Automatically triggered when:
-   - Changes are pushed to `prod` branch
-   - Changes are pushed to `tile-data` branch
-   - Dashboard, profile, or source files are modified
-   
-   This workflow:
-   - Automatically calls the pages-deploy workflow
-   - Can be manually triggered via workflow_dispatch
+This workflow:
+- ✅ Validates HTML structure (DOCTYPE, html, head, body tags)
+- ✅ Validates all 7 profile configurations exist with config.js
+- ✅ Ensures relative paths for GitHub Pages compatibility
+- ✅ Checks for required files (index.html, hamdash.html)
+- ✅ Validates profile directories are not empty
+- ✅ Displays directory tree and HTML file previews
+- ✅ Creates `_site/` bundle with all required files
+- ✅ Uploads `_site` artifact for deployment
 
-3. **Pages Deploy (pages-deploy.yml)** - Deploys to GitHub Pages:
-   - Downloads the `_site` artifact from dash-build
-   - Checks out or creates the `pages` branch
-   - Clears all files except `.git`
-   - Copies `_site/*` to the root of the `pages` branch
-   - Commits and pushes changes
-   - Makes the dashboard accessible at: https://pr-cybr.github.io/PR-SJU/
+#### 2. **Pages Trigger (pages-trigger.yml)**
+Automatically triggered when:
+- Changes are pushed to **`prod`** branch only
+- Dashboard, profile, or source files are modified
+
+This workflow:
+- ✅ Programmatically dispatches pages-deploy workflow
+- ✅ Prevents infinite loops with branch protection
+- ✅ Can be manually triggered via workflow_dispatch
+- ❌ **Does NOT trigger on tile-data** (isolation enforced)
+
+#### 3. **Pages Deploy (pages-deploy.yml)**
+Deploys to GitHub Pages:
+- ✅ Downloads the `_site` artifact from build job
+- ✅ Checks out or creates the `pages` branch
+- ✅ Deletes ALL files except `.git` directory
+- ✅ Copies `_site/*` to root of pages branch
+- ✅ Commits with github-actions[bot] credentials
+- ✅ Pushes to pages branch
+- ✅ Makes dashboard accessible at: https://pr-cybr.github.io/PR-SJU/
+
+**Concurrency Control:**
+```yaml
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+```
+
+### Tile Data Isolation (MANDATORY)
+
+The **tile-data** branch is **completely isolated** from the main deployment pipeline:
+
+#### Tile Workflows (Isolated to tile-data branch ONLY)
+
+1. **tile-worker.yml** - Fetches tile data every 15 minutes
+   - ✅ Parses sources/sources.md for tile URLs
+   - ✅ Downloads latest tile data
+   - ✅ Stores in data/ directory
+   - ✅ Cleanup step BEFORE branch switch (`rm -rf data/`)
+   - ✅ **ONLY pushes to tile-data branch**
+   - ❌ **NEVER modifies: main, dev, stage, prod, pages**
+
+2. **tile-loader.yml** - Processes tile data
+   - ✅ Creates JSON bundles for each tile
+   - ✅ Copies images to dashboard assets
+   - ✅ Cleanup step at job start
+   - ✅ **ONLY pushes to tile-data branch**
+   - ❌ **NEVER modifies: main, dev, stage, prod, pages**
+
+3. **tile-updater.yml** - Updates documentation
+   - ✅ Maintains tile backlog
+   - ✅ Generates status reports
+   - ✅ Cleanup step at job start
+   - ✅ **ONLY pushes to tile-data branch**
+   - ❌ **NEVER modifies: main, dev, stage, prod, pages**
+
+4. **tile-data-verify.yml** - Validates tile data integrity
+   - ✅ Triggers on: Push to tile-data branch
+   - ✅ Validates file existence and sizes
+   - ✅ Checks MIME types
+   - ✅ Verifies metadata.txt for each tile
+   - ✅ Fails workflow if any tile is invalid
+
+**Isolation Guarantees:**
+- All tile workflows include explicit branch guards
+- Comments in workflows clearly state: "ONLY push to tile-data branch"
+- Cleanup steps prevent contamination: `rm -rf data/ || true`
+- No tile workflow ever checks out or modifies: main, dev, stage, prod, or pages
+
+### Docker Deployment
+
+The Docker build validates all profiles load correctly:
+
+- **docker-build.yml** - Validates Docker container
+  - ✅ Builds on: dev, main, stage, prod branches
+  - ✅ Health checks dashboard loading
+  - ✅ Validates DEFAULT_PROFILE injection
+  - ✅ Ensures all 7 profiles accessible
+  - ✅ Tests index.html and hamdash.html
+  - ✅ Isolated from GitHub Pages workflows
+
+**Run with Docker:**
+```bash
+docker compose up -d
+# Or with specific profile:
+DEFAULT_PROFILE=WATCHDOGS docker compose up -d
+```
+
+Access at: http://localhost:8080/
 
 ### Manual Deployment
 
@@ -295,59 +391,57 @@ To manually trigger a deployment:
 4. Select the `prod` branch
 5. Click "Run workflow" button
 
-## 🔧 Required Workflows
+## 🧪 Acceptance Criteria
 
-The repository includes several automated workflows for CI/CD:
+The COA-1 implementation meets the following acceptance criteria:
 
-### Build & Validation Workflows
+✅ **HTML Validation**
+- All HTML files begin with `<!DOCTYPE html>`
+- All HTML files contain `<html>`, `<head>`, `<body>` tags
+- All internal resource paths are relative (e.g., `./js/...`, `./css/...`)
 
-- **docker-build.yml** - Validates Docker container builds
-  - Triggers on: Push/PR to dev, main, stage, prod
-  - Builds Dockerfile
-  - Runs container health checks
-  - Validates profile loading via DEFAULT_PROFILE
-  - Validates index.html exists and loads
+✅ **Profile Validation**
+- All 7 profiles exist: TOCOPS, PR-DIV, WATCHDOGS, INTEL-HUB, PR-SRN, PR-M3SH, PR-SPOT
+- Each profile directory contains a valid `config.js`
+- No profile directories are empty
 
-- **dash-build.yml** - Builds dashboard for deployment
-  - Triggers on: Changes to dash/, profiles/, sources/
-  - Creates _site directory structure
-  - Validates HTML and profile configurations
-  - Uploads build artifact
+✅ **Build Artifact**
+- `_site/` bundle is complete with all files
+- `_site/index.html` exists
+- `_site/hamdash.html` exists
+- `_site/profiles/**` contains all 7 profiles
+- `_site/sources/**` is present
 
-### Deployment Workflows
+✅ **Pages Branch**
+- Contains ONLY: index.html, hamdash.html, js/, css/, assets/, profiles/, sources/
+- Optionally: 404.html, README.md
+- No build artifacts or unnecessary files
 
-- **pages-trigger.yml** - Triggers GitHub Pages deployment
-  - Triggers on: Push to prod, tile-data, or dashboard changes
-  - Automatically calls pages-deploy workflow
+✅ **Tile Data Isolation**
+- tile-worker.yml only pushes to tile-data
+- tile-loader.yml only pushes to tile-data
+- tile-updater.yml only pushes to tile-data
+- Cleanup steps prevent contamination
+- NEVER modifies: main, dev, stage, prod, pages
 
-- **pages-deploy.yml** - Deploys to GitHub Pages
-  - Deploys dashboard to pages branch
-  - Makes site available at pr-cybr.github.io/PR-SJU
+✅ **Docker Deployment**
+- Container serves dashboard at http://localhost:8080/
+- DEFAULT_PROFILE injection works
+- All 7 profiles load correctly
+- Health checks pass
 
-### Tile Automation Workflows
+✅ **Dashboard Features**
+- Dark mode toggle works (🌙/☀️)
+- Profile selector loads all 7 profiles
+- Dashboard interface displays correctly
+- Mobile responsive design functions
 
-- **tile-worker.yml** - Fetches tile data every 15 minutes
-  - Parses sources/sources.md for tile URLs
-  - Downloads latest tile data
-  - Stores in data/ directory
-  - **Only pushes to tile-data branch**
+## 🔧 Workflow Status Badges
 
-- **tile-loader.yml** - Processes tile data
-  - Creates JSON bundles for each tile
-  - Copies images to dashboard assets
-  - **Only pushes to tile-data branch**
-
-- **tile-updater.yml** - Updates documentation
-  - Maintains tile backlog
-  - Generates status reports
-  - **Only pushes to tile-data branch**
-
-- **tile-data-verify.yml** - Validates tile data integrity
-  - Triggers on: Push to tile-data branch
-  - Validates file existence and sizes
-  - Checks MIME types
-  - Verifies metadata.txt for each tile
-  - Fails workflow if any tile is invalid
+[![Dashboard Build](https://github.com/PR-CYBR/PR-SJU/actions/workflows/dash-build.yml/badge.svg)](https://github.com/PR-CYBR/PR-SJU/actions/workflows/dash-build.yml)
+[![Pages Deploy](https://github.com/PR-CYBR/PR-SJU/actions/workflows/pages-deploy.yml/badge.svg)](https://github.com/PR-CYBR/PR-SJU/actions/workflows/pages-deploy.yml)
+[![Docker Build](https://github.com/PR-CYBR/PR-SJU/actions/workflows/docker-build.yml/badge.svg)](https://github.com/PR-CYBR/PR-SJU/actions/workflows/docker-build.yml)
+[![Tile Data Verify](https://github.com/PR-CYBR/PR-SJU/actions/workflows/tile-data-verify.yml/badge.svg)](https://github.com/PR-CYBR/PR-SJU/actions/workflows/tile-data-verify.yml)
 
 ### Branch Protection
 
