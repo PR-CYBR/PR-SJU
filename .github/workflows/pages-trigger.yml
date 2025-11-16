@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - prod
-      - tile-data
     paths:
       - 'dash/**'
       - 'profiles/**'
@@ -19,16 +18,22 @@ jobs:
   trigger-deployment:
     name: Trigger Pages Deployment
     runs-on: ubuntu-latest
+    # Only trigger if on prod branch (prevent infinite loops)
+    if: github.ref == 'refs/heads/prod'
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: prod
         
       - name: Trigger pages-deploy workflow
         uses: actions/github-script@v7
         with:
           script: |
             console.log('Triggering pages-deploy workflow...');
+            console.log(`Current branch: ${context.ref}`);
+            console.log(`Repository: ${context.repo.owner}/${context.repo.repo}`);
             
             try {
               const result = await github.rest.actions.createWorkflowDispatch({
