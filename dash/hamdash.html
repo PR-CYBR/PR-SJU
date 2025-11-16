@@ -2012,7 +2012,7 @@ var tileDelay = ${JSON.stringify(
         const urlProfile = urlParams.get('profile');
         
         // Check for DEFAULT_PROFILE environment variable (set via Docker)
-        const envProfile = typeof DEFAULT_PROFILE !== 'undefined' ? DEFAULT_PROFILE : null;
+        const envProfile = typeof window.DEFAULT_PROFILE !== 'undefined' ? window.DEFAULT_PROFILE : null;
         
         // Load saved profile from localStorage
         const savedProfile = localStorage.getItem('selectedProfile');
