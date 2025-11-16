@@ -588,6 +588,40 @@ db   8D    88       88    88booo. 88.     db   8D
         border-color: var(--accent-secondary);
         box-shadow: 0 0 5px var(--accent-secondary);
       }
+      
+      /* Loading overlay for profile switching */
+      #loadingOverlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      .loading-spinner {
+        text-align: center;
+        color: var(--fg-primary);
+      }
+      
+      .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid var(--accent-primary);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     </style>
 
     <!--
@@ -1973,17 +2007,61 @@ var tileDelay = ${JSON.stringify(
       function initializeProfileSelector() {
         const profileSelect = document.getElementById('profileSelect');
         
+        // Priority order: URL parameter > environment variable > localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlProfile = urlParams.get('profile');
+        
+        // Check for DEFAULT_PROFILE environment variable (set via Docker)
+        const envProfile = typeof window.DEFAULT_PROFILE !== 'undefined' ? window.DEFAULT_PROFILE : null;
+        
         // Load saved profile from localStorage
         const savedProfile = localStorage.getItem('selectedProfile');
-        if (savedProfile) {
-          profileSelect.value = savedProfile;
+        
+        // Determine which profile to use
+        const profileToLoad = urlProfile || envProfile || savedProfile;
+        
+        if (profileToLoad) {
+          profileSelect.value = profileToLoad;
+          // Load the profile configuration
+          loadProfileConfig(profileToLoad);
         }
         
         // Profile selection event listener
         profileSelect.addEventListener('change', (e) => {
           const selectedProfile = e.target.value;
-          loadProfileConfig(selectedProfile);
+          // Show loading animation
+          showLoadingOverlay();
+          
+          // Load profile with a slight delay to show animation
+          setTimeout(() => {
+            loadProfileConfig(selectedProfile);
+            hideLoadingOverlay();
+          }, 300);
         });
+      }
+      
+      // Loading overlay functions
+      function showLoadingOverlay() {
+        let overlay = document.getElementById('loadingOverlay');
+        if (!overlay) {
+          overlay = document.createElement('div');
+          overlay.id = 'loadingOverlay';
+          overlay.innerHTML = `
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <p>Loading Profile...</p>
+            </div>
+          `;
+          document.body.appendChild(overlay);
+        }
+        overlay.style.display = 'flex';
+      }
+      
+      function hideLoadingOverlay() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+          overlay.style.display = 'none';
+        }
       }
 
       // Initialize theme and profile on DOMContentLoaded

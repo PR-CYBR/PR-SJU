@@ -48,8 +48,62 @@ Satellite tracking and space weather monitoring with ISS position and solar acti
 ### Prerequisites
 - Modern web browser (Chrome, Firefox, Edge, Safari)
 - Optional: Local web server for development
+- Optional: Docker and Docker Compose for containerized deployment
 
-### Running Locally
+## 🐳 Deploy with Docker
+
+The easiest way to run the PR-SJU Dashboard is with Docker:
+
+### Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/PR-CYBR/PR-SJU.git
+   cd PR-SJU
+   ```
+
+2. **Start with Docker Compose**
+   ```bash
+   docker compose up -d
+   ```
+
+3. **Access the dashboard**
+   ```
+   http://localhost:8080
+   ```
+
+### Docker Configuration
+
+The Docker deployment includes:
+- **nginx:alpine** base image for lightweight serving
+- Automatic profile and data directory mounting
+- Environment variable support for default profile
+- Health checks for container monitoring
+
+### Environment Variables
+
+- `DEFAULT_PROFILE`: Set the default profile to load (e.g., `PR-DIV`, `TOCOPS`)
+
+Example with custom profile:
+```bash
+DEFAULT_PROFILE=WATCHDOGS docker compose up -d
+```
+
+### Stopping the Dashboard
+
+```bash
+docker compose down
+```
+
+### Building the Docker Image
+
+To build the image manually:
+```bash
+docker build -t pr-sju-dash .
+docker run -p 8080:80 pr-sju-dash
+```
+
+### Running Locally (Without Docker)
 
 1. **Clone the repository**
    ```bash
@@ -141,6 +195,22 @@ The dashboard uses a three-stage workflow system:
    - PR-M3SH
    - PR-SPOT
 4. Profile loads automatically with custom tiles and menu
+
+### Profile Selection Methods
+
+The dashboard supports multiple ways to select a profile (in priority order):
+
+1. **URL Parameter** - Load a specific profile directly:
+   ```
+   http://localhost:8080/hamdash.html?profile=WATCHDOGS
+   ```
+
+2. **Environment Variable** - Set default profile in Docker:
+   ```bash
+   DEFAULT_PROFILE=TOCOPS docker compose up -d
+   ```
+
+3. **localStorage** - Your last selected profile is automatically saved and restored
 
 ### Profile Persistence
 
