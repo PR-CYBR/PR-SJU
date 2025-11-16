@@ -1,8 +1,8 @@
 const disableSetup = false;
-var topBarCenterText = `VA3HDL - FN04ga`;
+var topBarCenterText = `PR-SJU – CIV-DASH`;
 
 // Grid layout
-var layout_cols = 4;
+var layout_cols = 3;
 var layout_rows = 3;
 
 // Menu items
@@ -51,62 +51,72 @@ var aURL = [
   ],
 ];
 
-// Dashboard items
+// Dashboard items for PR-SJU CIV-DASH
 // Structure is Title, Image Source URL
 // [Title, Image Source URL],
 // the comma at the end is important!
-// You can't add more items because there are only 12 placeholders on the dashboard
-// but you can replace the titles and the images with anything you want.
+// 3x3 grid = 9 tiles total
 var aIMG = [
-  ["RADAR", "https://radar.weather.gov/ridge/standard/CONUS_loop.gif"],
   [
-    "LOCAL RADAR",
-    "https://radar.weather.gov/ridge/standard/KNQA_loop.gif",
+    "Puerto Rico Radar",
+    "https://radar.weather.gov/ridge/standard/CENTAM_loop.gif",
+    "https://www.weather.gov/images/sju/Radar_Loop.gif"
   ],
   [
-    "NOAA D-RAP",
-    "https://services.swpc.noaa.gov/images/animations/d-rap/global/d-rap/latest.png",
+    "Local Radar: San Juan",
+    "https://radar.weather.gov/ridge/standard/TJUA_loop.gif"
   ],
   [
-    "ISS POSITION",
-    "https://www.heavens-above.com/orbitdisplay.aspx?icon=iss&width=600&height=300&mode=M&satid=25544",
-  ],
-  [
-    "SATELLITE CAN",
-    "https://cdn.star.nesdis.noaa.gov/GOES16/GLM/SECTOR/can/EXTENT3/GOES16-CAN-EXTENT3-1125x560.gif",
-  ],
-  [
-    "SATELLITE CGL",
+    "Satellite CGL",
     "https://cdn.star.nesdis.noaa.gov/GOES16/GLM/SECTOR/cgl/EXTENT3/GOES16-CGL-EXTENT3-600x600.gif",
+    "https://cdn.star.nesdis.noaa.gov/GOES16/ABI/SECTOR/cgl/GEOCOLOR/600x600.jpg"
   ],
   [
-    "LIGHTNING",
+    "Flightradar / ADS-B",
+    "iframe|https://globe.adsbexchange.com"
+  ],
+  [
+    "HF Propagation",
+    "https://www.hamqsl.com/solar101vhf.php"
+  ],
+  [
+    "Satellite Tracker - ISS",
+    "https://www.heavens-above.com/orbitdisplay.aspx?icon=iss&width=600&height=300&mode=M&satid=25544",
+    "https://isat.sattrackcam.org/?satcat=25544"
+  ],
+  [
+    "Moon Phase",
+    "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005023/frames/730x730_1x1_30p/moon.2025.jpg"
+  ],
+  [
+    "AIS Vessel Tracker",
+    "iframe|https://www.vesselfinder.com/?zoom=9&lat=18.4&lon=-66.1"
+  ],
+  [
+    "Lightning/Storm Awareness",
     "https://images.lightningmaps.org/blitzortung/america/index.php?animation=usa",
-  ],
-  [
-    "LIGHTNING LOCAL",
-    "https://www.blitzortung.org/en/Images/image_b_ny.png",
-  ],
-  ["YOUTUBE EXAMPLE", "iframe|https://www.youtube.com/embed/fzPFaXAV_2Y?autoplay=1&mute=1"],
-  [
-    "WEBSITE EXAMPLE",
-    "iframe|https://globe.adsbexchange.com/?airport=YYZ",
-  ],
-  ["VIDEO EXAMPLE", "https://himawari8.nict.go.jp/movie/720/20240611_pifd.mp4"],
-  ["HF PROPAGATION",
-    "https://www.hamqsl.com/solar101vhf.php"],
+    "iframe|https://www.lightningmaps.org/realtime?lang=en#m=oss;t=3;s=0;o=0;b=;ts=0;y=18.2208;x=-66.5901;z=8;d=2;dl=2;dc=0;"
+  ]
 ];
 
 // Image rotation intervals in milliseconds per tile - If the line below is commented, all tiles will be rotated every 30000 milliseconds (30s)
+// 60000ms = 60 seconds refresh for most tiles
 var tileDelay = [
-  11200,10000,11000,10100,
-  10200,10500,10300,10600,
-  30400,60700,60900,10800
+  60000,  // Tile 1: PR Radar - 60s refresh
+  60000,  // Tile 2: Local Radar - 60s refresh
+  60000,  // Tile 3: Satellite CGL - 60s refresh
+  0,      // Tile 4: ADS-B iframe - no rotation
+  60000,  // Tile 5: HF Propagation - 60s refresh
+  60000,  // Tile 6: Satellite Tracker - 60s refresh
+  0,      // Tile 7: Moon Phase - no rotation needed
+  0,      // Tile 8: AIS iframe - no rotation
+  60000   // Tile 9: Lightning - 60s refresh
 ];
 
-// RSS feed items
+// RSS feed items for Puerto Rico news and updates
 // Structure is [feed URL, refresh interval in minutes]
 var aRSS = [
-  ["https://www.amsat.org/feed/", 60],           // Example RSS feed, refresh every 60 minutes
-  ["https://daily.hamweekly.com/atom.xml", 120], // Example Atom feed, refresh every 120 minutes
-  ];
+  ["https://www.amsat.org/feed/", 60],           // AMSAT feed, refresh every 60 minutes
+  ["https://daily.hamweekly.com/atom.xml", 120], // Ham Weekly feed, refresh every 120 minutes
+  ["https://www.arrl.org/news/rss", 90]          // ARRL news feed, refresh every 90 minutes
+];
