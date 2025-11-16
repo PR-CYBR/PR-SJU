@@ -2,6 +2,9 @@
 // General ham radio operations for PR-CYBR San Juan Division
 
 export default {
+  id: "PR-DIV",
+  topBarCenterText: "PR-DIV – Puerto Rico Division",
+  
   grid: {
     columns: 4,
     rows: 3
@@ -29,5 +32,26 @@ export default {
     ["WSPR", "https://www.wsprnet.org/drupal/wsprnet/map"],
     ["MUF MAP", "https://prop.kc2g.com/renders/current/mufd-normal-now.svg"],
     ["BAND CONDITIONS", "https://www.hamqsl.com/solar100sc.php"]
+  ],
+  
+  tileDelay: [
+    60000,  // HF PROPAGATION
+    60000,  // SOLAR
+    60000,  // D-REGION
+    60000,  // AURORA
+    60000,  // LOCAL RADAR
+    60000,  // ISS POSITION
+    60000,  // SATELLITE PR
+    60000,  // LIGHTNING
+    60000,  // GRAY LINE
+    0,      // WSPR
+    60000,  // MUF MAP
+    60000   // BAND CONDITIONS
+  ],
+  
+  rss: [
+    ["https://www.amsat.org/feed/", 60],
+    ["https://daily.hamweekly.com/atom.xml", 120],
+    ["https://www.arrl.org/news/rss", 90]
   ]
 };

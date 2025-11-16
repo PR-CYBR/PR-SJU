@@ -2,6 +2,9 @@
 // Satellite monitoring and space weather
 
 export default {
+  id: "PR-SPOT",
+  topBarCenterText: "PR-SPOT – Satellite & Space Weather",
+  
   grid: {
     columns: 4,
     rows: 3
@@ -29,5 +32,25 @@ export default {
     ["MUF MAP", "https://prop.kc2g.com/renders/current/mufd-normal-now.svg"],
     ["IONOGRAM", "https://www.sws.bom.gov.au/Images/World%20Data%20Centre/Data%20Display%20and%20Download/Ionogram/latest_ionogram.gif"],
     ["SPACE WEATHER", "https://www.swpc.noaa.gov/products/station-k-and-indices"]
+  ],
+  
+  tileDelay: [
+    60000,  // ISS POSITION
+    60000,  // SOLAR
+    60000,  // AURORA
+    60000,  // D-REGION
+    60000,  // SATELLITE PR
+    60000,  // SATELLITE IR
+    60000,  // SATELLITE WV
+    60000,  // HF PROPAGATION
+    60000,  // GRAY LINE
+    60000,  // MUF MAP
+    60000,  // IONOGRAM
+    60000   // SPACE WEATHER
+  ],
+  
+  rss: [
+    ["https://www.amsat.org/feed/", 60],
+    ["https://www.spaceweather.com/rss.php", 120]
   ]
 };

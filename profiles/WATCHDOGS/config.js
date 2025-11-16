@@ -2,6 +2,9 @@
 // Maritime, aviation, and communications monitoring
 
 export default {
+  id: "WATCHDOGS",
+  topBarCenterText: "WATCHDOGS – Monitoring Operations",
+  
   grid: {
     columns: 3,
     rows: 3
@@ -26,5 +29,22 @@ export default {
     ["SATELLITE IR", "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/pr/13/1200x1200.jpg"],
     ["WAVE ANALYSIS", "https://polar.ncep.noaa.gov/waves/latest_run/multi_1.atl_10m.png"],
     ["OCEAN CURRENTS", "https://oceanservice.noaa.gov/facts/sedscimap.html"]
+  ],
+  
+  tileDelay: [
+    0,      // AIS CARIBBEAN
+    0,      // ADSB EXCHANGE
+    60000,  // EARTHQUAKES
+    60000,  // LIGHTNING MAP
+    0,      // FIRE ALERTS
+    60000,  // SATELLITE VIS
+    60000,  // SATELLITE IR
+    60000,  // WAVE ANALYSIS
+    0       // OCEAN CURRENTS
+  ],
+  
+  rss: [
+    ["https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.atom", 30],
+    ["https://www.nhc.noaa.gov/index-at.xml", 60]
   ]
 };

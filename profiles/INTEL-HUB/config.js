@@ -2,6 +2,9 @@
 // SIGINT, OSINT, and intelligence gathering operations
 
 export default {
+  id: "INTEL-HUB",
+  topBarCenterText: "INTEL-HUB – Intelligence Operations",
+  
   grid: {
     columns: 4,
     rows: 3
@@ -29,5 +32,25 @@ export default {
     ["MUF MAP", "https://prop.kc2g.com/renders/current/mufd-normal-now.svg"],
     ["IONOGRAM", "https://www.sws.bom.gov.au/Images/World%20Data%20Centre/Data%20Display%20and%20Download/Ionogram/latest_ionogram.gif"],
     ["GLOBAL ALERTS", "https://www.gdacs.org/"]
+  ],
+  
+  tileDelay: [
+    0,      // SPECTRUM - no rotation
+    60000,  // HF PROPAGATION
+    60000,  // SOLAR ACTIVITY
+    60000,  // D-RAP NOAA
+    0,      // REVERSE BEACON
+    0,      // WSPR MAP
+    0,      // PSKREPORTER
+    60000,  // SATELLITE PR
+    60000,  // GRAY LINE
+    60000,  // MUF MAP
+    60000,  // IONOGRAM
+    0       // GLOBAL ALERTS
+  ],
+  
+  rss: [
+    ["https://www.amsat.org/feed/", 60],
+    ["https://daily.hamweekly.com/atom.xml", 120]
   ]
 };
