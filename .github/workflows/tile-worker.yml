@@ -10,6 +10,9 @@ on:
       - 'sources/sources.md'
       - '.github/workflows/tile-worker.yml'
 
+permissions:
+  contents: write
+
 jobs:
   source-update:
     name: Update Source List
@@ -214,12 +217,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
+          # Check if tile-data branch exists, create if not
+          if git ls-remote --heads origin tile-data | grep tile-data; then
+            echo "tile-data branch exists, checking it out..."
+            git fetch origin tile-data
+            git checkout tile-data
+          else
+            echo "tile-data branch does not exist, creating it..."
+            git checkout -b tile-data
+          fi
+          
           git add data/
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
             git commit -m "Update tile data [automated]"
-            git push
+            git push origin tile-data
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

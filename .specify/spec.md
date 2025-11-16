@@ -208,24 +208,44 @@ Three-stage GitHub Actions workflow for automated tile updates:
    - Parses `sources/sources.md` for tile URLs
    - Fetches and stores tile data
    - Validates content and generates metadata
+   - **Pushes data only to `tile-data` branch** to avoid protected branch conflicts
 
 2. **Tile Loader** (`tile-loader.yml`)
    - Triggered by tile-worker completion
    - Creates JSON bundles for each tile
    - Processes and optimizes images
    - Prepares data for dashboard consumption
+   - **Commits bundles only to `tile-data` branch**
 
 3. **Tile Updater** (`tile-updater.yml`)
    - Updates dashboard documentation
    - Generates status reports
    - Posts notifications to Slack and Notion
    - Maintains tile backlog
+   - **Commits updates only to `tile-data` branch**
+
+4. **Pages Deploy** (`pages-deploy.yml`)
+   - Triggered on push to `prod` branch
+   - Copies `/dash/` contents to temporary directory
+   - Switches to `pages` branch
+   - Clears pages branch (except .git)
+   - Deploys dashboard files to root of `pages` branch
+   - Commits and pushes to `pages` branch for GitHub Pages hosting
 
 #### Deployment
-- **GitHub Pages** deployment from `prod` branch
+- **GitHub Pages** deployment from `prod` branch to `pages` branch
+- Dashboard contents from `/dash/` directory deployed to root of `pages` branch
 - Static site generation with optimized assets
 - CDN delivery for global access
 - Custom domain support
+
+#### Branch Protection and Data Isolation
+- **Protected Branches**: `main`, `dev`, `test`, `stage`, `prod`, `pages` - no direct pushes from automation
+- **Tile Data Branch**: `tile-data` - dedicated branch for automated tile data commits
+  - All tile worker workflows push only to `tile-data` branch
+  - Tile metadata and generated artifacts stored separately from main codebase
+  - Prevents permission conflicts with protected branches
+  - Allows continuous tile updates without affecting production code
 
 ### UI/UX Features
 
