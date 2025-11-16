@@ -6,6 +6,9 @@ COPY dash /usr/share/nginx/html/
 # Copy profile configurations
 COPY profiles /usr/share/nginx/html/profiles/
 
+# Copy sources directory
+COPY sources /usr/share/nginx/html/sources/
+
 # Copy data directory if present (optional)
 # Note: This will be mounted as a volume in docker-compose
 RUN mkdir -p /usr/share/nginx/html/data
