@@ -42,6 +42,10 @@ jobs:
           echo "Files copied to _site:"
           ls -la _site/
           
+          echo ""
+          echo "SITE STRUCTURE:"
+          find _site -maxdepth 4 -type f | sort
+          
       - name: Copy profiles to _site
         run: |
           echo "Copying profiles/ to _site/profiles/..."
@@ -129,8 +133,8 @@ jobs:
             exit 1
           fi
           
-          # Check for DOCTYPE
-          if grep -q "<!DOCTYPE html>" _site/index.html; then
+          # Check for DOCTYPE (case-insensitive)
+          if grep -iq "<!DOCTYPE html>" _site/index.html; then
             echo "✓ index.html has DOCTYPE declaration"
           else
             echo "✗ index.html missing DOCTYPE"
@@ -163,8 +167,8 @@ jobs:
           if [ -f "_site/hamdash.html" ]; then
             echo "✓ hamdash.html exists"
             
-            # Basic validation
-            if grep -q "<!DOCTYPE html>" _site/hamdash.html; then
+            # Basic validation (case-insensitive DOCTYPE check)
+            if grep -iq "<!DOCTYPE html>" _site/hamdash.html; then
               echo "✓ hamdash.html has DOCTYPE declaration"
             else
               echo "✗ hamdash.html missing DOCTYPE"
