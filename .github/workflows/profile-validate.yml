@@ -1,0 +1,232 @@
+name: Profile Config Validation
+
+on:
+  pull_request:
+    paths:
+      - 'profiles/**/config.js'
+  push:
+    branches:
+      - main
+      - dev
+      - stage
+    paths:
+      - 'profiles/**/config.js'
+  workflow_dispatch:
+
+jobs:
+  validate-profiles:
+    name: Validate Profile Configurations
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Create validation script
+        run: |
+          cat > validate-profiles.js << 'EOF'
+          #!/usr/bin/env node
+          
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Colors for console output
+          const colors = {
+            reset: '\x1b[0m',
+            red: '\x1b[31m',
+            green: '\x1b[32m',
+            yellow: '\x1b[33m',
+            blue: '\x1b[34m',
+            cyan: '\x1b[36m'
+          };
+          
+          function log(message, color = 'reset') {
+            console.log(`${colors[color]}${message}${colors.reset}`);
+          }
+          
+          function validateProfileConfig(filePath) {
+            log(`\n📋 Validating: ${filePath}`, 'cyan');
+            const errors = [];
+            const warnings = [];
+            
+            try {
+              // Read file content
+              const content = fs.readFileSync(filePath, 'utf8');
+              
+              // Check 1: No text before export default (only comments allowed)
+              const beforeExport = content.split('export default')[0];
+              const lines = beforeExport.split('\n');
+              
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                // Skip empty lines and comments
+                if (line && !line.startsWith('//') && !line.startsWith('/*') && !line.includes('*/')) {
+                  errors.push(`Line ${i + 1}: Found non-comment text before 'export default': "${line.substring(0, 50)}..."`);
+                }
+              }
+              
+              // Check 2: Must contain 'export default'
+              if (!content.includes('export default')) {
+                errors.push('Missing "export default" statement - config must be an ES module');
+              }
+              
+              // Check 3: Required fields - just check if they appear in the file
+              const requiredFields = ['id:', 'grid:', 'menu:', 'tiles:'];
+              for (const field of requiredFields) {
+                if (!content.includes(field)) {
+                  errors.push(`Missing required field: "${field.replace(':', '')}"`);
+                }
+              }
+              
+              // Check 4: Grid structure
+              if (content.includes('grid:')) {
+                if (!content.includes('columns:') || !content.includes('rows:')) {
+                  errors.push('Grid must have "columns" and "rows" properties');
+                }
+              }
+              
+              // Check 5: Basic syntax checks
+              const openBraces = (content.match(/{/g) || []).length;
+              const closeBraces = (content.match(/}/g) || []).length;
+              if (openBraces !== closeBraces) {
+                errors.push(`Mismatched braces: ${openBraces} opening, ${closeBraces} closing`);
+              }
+              
+              const openBrackets = (content.match(/\[/g) || []).length;
+              const closeBrackets = (content.match(/\]/g) || []).length;
+              if (openBrackets !== closeBrackets) {
+                errors.push(`Mismatched brackets: ${openBrackets} opening, ${closeBrackets} closing`);
+              }
+              
+              // Check 6: Validate it's valid JavaScript by checking syntax patterns
+              if (content.includes('export default') && !content.match(/export\s+default\s+{/)) {
+                warnings.push('export default should be followed by an object literal');
+              }
+              
+            } catch (error) {
+              errors.push(`Failed to read or parse file: ${error.message}`);
+            }
+            
+            return { errors, warnings };
+          }
+          
+          function main() {
+            log('🔍 Starting Profile Configuration Validation', 'blue');
+            log('═'.repeat(60), 'blue');
+            
+            const profilesDir = path.join(process.cwd(), 'profiles');
+            
+            if (!fs.existsSync(profilesDir)) {
+              log('❌ Profiles directory not found!', 'red');
+              process.exit(1);
+            }
+            
+            const profiles = fs.readdirSync(profilesDir)
+              .filter(name => fs.statSync(path.join(profilesDir, name)).isDirectory());
+            
+            log(`\nFound ${profiles.length} profile(s) to validate\n`, 'cyan');
+            
+            let totalErrors = 0;
+            let totalWarnings = 0;
+            const results = [];
+            
+            for (const profile of profiles) {
+              const configPath = path.join(profilesDir, profile, 'config.js');
+              
+              if (!fs.existsSync(configPath)) {
+                log(`⚠️  Profile "${profile}" has no config.js file`, 'yellow');
+                totalWarnings++;
+                continue;
+              }
+              
+              const { errors, warnings } = validateProfileConfig(configPath);
+              
+              results.push({
+                profile,
+                errors: errors.length,
+                warnings: warnings.length
+              });
+              
+              if (errors.length > 0) {
+                log(`❌ ERRORS in ${profile}:`, 'red');
+                errors.forEach(err => log(`   • ${err}`, 'red'));
+                totalErrors += errors.length;
+              }
+              
+              if (warnings.length > 0) {
+                log(`⚠️  WARNINGS in ${profile}:`, 'yellow');
+                warnings.forEach(warn => log(`   • ${warn}`, 'yellow'));
+                totalWarnings += warnings.length;
+              }
+              
+              if (errors.length === 0 && warnings.length === 0) {
+                log(`✅ ${profile} - All checks passed`, 'green');
+              }
+            }
+            
+            log('\n' + '═'.repeat(60), 'blue');
+            log('\n📊 Validation Summary:', 'blue');
+            log(`   Total Profiles: ${profiles.length}`, 'cyan');
+            log(`   Errors: ${totalErrors}`, totalErrors > 0 ? 'red' : 'green');
+            log(`   Warnings: ${totalWarnings}`, totalWarnings > 0 ? 'yellow' : 'green');
+            
+            if (totalErrors > 0) {
+              log('\n❌ Validation failed! Please fix the errors above.', 'red');
+              process.exit(1);
+            } else if (totalWarnings > 0) {
+              log('\n⚠️  Validation passed with warnings.', 'yellow');
+              process.exit(0);
+            } else {
+              log('\n✅ All profiles validated successfully!', 'green');
+              process.exit(0);
+            }
+          }
+          
+          main();
+          EOF
+          
+          chmod +x validate-profiles.js
+      
+      - name: Run validation
+        run: node validate-profiles.js
+      
+      - name: Test ES module imports
+        run: |
+          cat > test-imports.mjs << 'EOF'
+          import { readdir } from 'fs/promises';
+          import { join } from 'path';
+          
+          const profilesDir = './profiles';
+          const profiles = await readdir(profilesDir, { withFileTypes: true });
+          
+          console.log('Testing ES module imports for all profiles...\n');
+          
+          for (const profile of profiles) {
+            if (profile.isDirectory()) {
+              try {
+                const configPath = `./${join(profilesDir, profile.name, 'config.js')}`;
+                const module = await import(configPath);
+                const config = module.default;
+                
+                console.log(`✅ ${profile.name}: id=${config.id}, grid=${config.grid.columns}x${config.grid.rows}, tiles=${config.tiles.length}`);
+              } catch (error) {
+                console.error(`❌ ${profile.name}: ${error.message}`);
+                process.exit(1);
+              }
+            }
+          }
+          
+          console.log('\n✅ All profile imports successful!');
+          EOF
+          
+          node test-imports.mjs
+      
+      - name: Output validation results
+        if: always()
+        run: |
+          echo "::notice::Profile validation completed. Check the logs above for details."
