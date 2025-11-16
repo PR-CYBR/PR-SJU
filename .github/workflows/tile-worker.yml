@@ -212,6 +212,10 @@ jobs:
             fi
           done
           
+      - name: Clean untracked tile data
+        run: |
+          rm -rf data/ || true
+          
       - name: Commit tile data
         run: |
           git config user.name "github-actions[bot]"
