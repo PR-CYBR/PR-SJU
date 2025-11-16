@@ -148,3 +148,164 @@ This template is designed to be extended with:
 - Clear documentation in README
 - Self-explanatory directory structure
 - Minimal learning curve for new users
+
+## PR-SJU Dashboard System
+
+### Overview
+The PR-SJU Dashboard is a multi-profile ham radio and emergency operations monitoring system designed for the San Juan Division of PR-CYBR. It provides real-time visualization of weather, space weather, propagation conditions, and operational status across seven specialized profiles.
+
+### Architecture
+
+#### Frontend Components
+- **Dashboard Interface** (`/dash/hamdash.html`): Main dashboard with tile grid display
+- **Landing Page** (`/dash/index.html`): Entry point and welcome screen
+- **Profile System** (`/profiles/*/config.js`): Modular profile configurations
+- **Theme System**: Dark/light mode with CSS variables and localStorage persistence
+
+#### Profile System
+The dashboard supports seven operational profiles, each with custom tile configurations:
+
+1. **TOCOPS** - Tactical Operations Center
+   - Weather radar and satellite imagery
+   - Tropical weather monitoring
+   - Emergency coordination tools
+
+2. **PR-DIV** - Puerto Rico Division
+   - HF propagation conditions
+   - Solar activity monitoring
+   - Amateur radio tools and resources
+
+3. **WATCHDOGS** - Monitoring Operations
+   - AIS maritime tracking
+   - ADSB aviation tracking
+   - Earthquake and lightning monitoring
+
+4. **INTEL-HUB** - Intelligence Hub
+   - Spectrum analysis
+   - SIGINT resources
+   - Propagation and ionospheric monitoring
+
+5. **PR-SRN** - San Juan Radio Network
+   - VHF/UHF band conditions
+   - APRS tracking
+   - Repeater coordination
+
+6. **PR-M3SH** - Mesh Network
+   - Mesh networking status
+   - LoRa and alternative communications
+   - WSPR tracking
+
+7. **PR-SPOT** - Satellite & Space Weather
+   - Satellite tracking
+   - Space weather conditions
+   - Ionospheric monitoring
+
+#### Automation System
+Three-stage GitHub Actions workflow for automated tile updates:
+
+1. **Tile Worker** (`tile-worker.yml`)
+   - Scheduled execution every 15 minutes
+   - Parses `sources/sources.md` for tile URLs
+   - Fetches and stores tile data
+   - Validates content and generates metadata
+
+2. **Tile Loader** (`tile-loader.yml`)
+   - Triggered by tile-worker completion
+   - Creates JSON bundles for each tile
+   - Processes and optimizes images
+   - Prepares data for dashboard consumption
+
+3. **Tile Updater** (`tile-updater.yml`)
+   - Updates dashboard documentation
+   - Generates status reports
+   - Posts notifications to Slack and Notion
+   - Maintains tile backlog
+
+#### Deployment
+- **GitHub Pages** deployment from `prod` branch
+- Static site generation with optimized assets
+- CDN delivery for global access
+- Custom domain support
+
+### UI/UX Features
+
+#### Dark Mode Toggle
+- Persistent theme selection via localStorage
+- CSS variable-based theming system
+- Smooth transitions between modes
+- Icon indicator (🌙/☀️) in top-right corner
+
+#### Profile Selector
+- Dropdown in dashboard setup page
+- Dynamic config loading from `/profiles/<name>/config.js`
+- Automatic tile and menu updates
+- Profile persistence across sessions
+
+#### Responsive Design
+- Mobile-first approach
+- Tablet and desktop optimizations
+- Touch-friendly controls
+- Adaptive grid layout
+
+### Data Flow
+
+```
+sources/sources.md (URLs)
+        ↓
+tile-worker.yml (fetch)
+        ↓
+data/<tile-id>/latest.* (storage)
+        ↓
+tile-loader.yml (process)
+        ↓
+dash/tiles/<tile-id>.json (bundles)
+        ↓
+hamdash.html (display)
+```
+
+### Configuration Format
+
+Profile configurations use ES6 module format:
+
+```javascript
+export default {
+  grid: {
+    columns: 4,
+    rows: 3
+  },
+  menu: [
+    ["color", "label", "url", "scale", "side"]
+  ],
+  tiles: [
+    ["title", "image_url"]
+  ]
+};
+```
+
+### Security Considerations
+- No sensitive data in configuration files
+- All external URLs are validated
+- Content Security Policy headers
+- HTTPS-only deployment
+- No client-side data storage of credentials
+
+### Performance Requirements
+- Initial page load < 3 seconds
+- Tile refresh < 30 seconds
+- Smooth theme transitions
+- Efficient image caching
+- Minimal JavaScript bundle size
+
+### Browser Compatibility
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+### Accessibility
+- Semantic HTML structure
+- ARIA labels for interactive elements
+- Keyboard navigation support
+- High contrast mode compatibility
+- Screen reader friendly

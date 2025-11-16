@@ -1,0 +1,231 @@
+name: Tile Worker
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'sources/sources.md'
+      - '.github/workflows/tile-worker.yml'
+
+jobs:
+  source-update:
+    name: Update Source List
+    runs-on: ubuntu-latest
+    outputs:
+      sources-changed: ${{ steps.check-changes.outputs.changed }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Check for source changes
+        id: check-changes
+        run: |
+          git fetch origin
+          if git diff --quiet origin/main -- sources/sources.md; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Parse sources.md
+        id: parse
+        run: |
+          echo "Parsing sources.md for tile URLs..."
+          cat sources/sources.md | grep "url:" | wc -l
+          
+  source-fetcher:
+    name: Fetch Tile Sources
+    runs-on: ubuntu-latest
+    needs: source-update
+    if: always()
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pyyaml pillow beautifulsoup4
+          
+      - name: Create fetch script
+        run: |
+          cat > fetch_tiles.py << 'EOF'
+          #!/usr/bin/env python3
+          import os
+          import re
+          import requests
+          import hashlib
+          from pathlib import Path
+          from urllib.parse import urlparse
+          
+          def parse_sources_md(file_path):
+              """Parse sources.md to extract tile IDs and URLs."""
+              tiles = []
+              with open(file_path, 'r') as f:
+                  content = f.read()
+                  
+              # Extract tile entries
+              pattern = r'- id: ([^\n]+)\n\s+url: ([^\n]+)'
+              matches = re.findall(pattern, content)
+              
+              for tile_id, url in matches:
+                  tiles.append({
+                      'id': tile_id.strip(),
+                      'url': url.strip()
+                  })
+              
+              return tiles
+          
+          def fetch_tile(tile_id, url):
+              """Fetch a tile from the given URL."""
+              try:
+                  print(f"Fetching {tile_id} from {url}")
+                  
+                  # Set up headers to mimic browser
+                  headers = {
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                  }
+                  
+                  response = requests.get(url, headers=headers, timeout=30, allow_redirects=True)
+                  response.raise_for_status()
+                  
+                  # Determine content type and extension
+                  content_type = response.headers.get('content-type', '').lower()
+                  
+                  if 'image' in content_type:
+                      if 'gif' in content_type:
+                          ext = 'gif'
+                      elif 'png' in content_type:
+                          ext = 'png'
+                      elif 'jpeg' in content_type or 'jpg' in content_type:
+                          ext = 'jpg'
+                      else:
+                          ext = 'png'
+                  elif 'html' in content_type:
+                      ext = 'html'
+                  else:
+                      # Try to guess from URL
+                      parsed = urlparse(url)
+                      path_ext = Path(parsed.path).suffix.lstrip('.')
+                      ext = path_ext if path_ext else 'dat'
+                  
+                  # Create data directory
+                  data_dir = Path('data') / tile_id
+                  data_dir.mkdir(parents=True, exist_ok=True)
+                  
+                  # Save content
+                  output_file = data_dir / f'latest.{ext}'
+                  with open(output_file, 'wb') as f:
+                      f.write(response.content)
+                  
+                  # Save metadata
+                  metadata = {
+                      'url': url,
+                      'content_type': content_type,
+                      'size': len(response.content),
+                      'hash': hashlib.sha256(response.content).hexdigest()
+                  }
+                  
+                  metadata_file = data_dir / 'metadata.txt'
+                  with open(metadata_file, 'w') as f:
+                      for key, value in metadata.items():
+                          f.write(f"{key}: {value}\n")
+                  
+                  print(f"✓ Saved {tile_id} ({len(response.content)} bytes)")
+                  return True
+                  
+              except Exception as e:
+                  print(f"✗ Failed to fetch {tile_id}: {str(e)}")
+                  return False
+          
+          def main():
+              sources_file = 'sources/sources.md'
+              tiles = parse_sources_md(sources_file)
+              
+              print(f"Found {len(tiles)} tiles to fetch")
+              
+              success_count = 0
+              for tile in tiles:
+                  if fetch_tile(tile['id'], tile['url']):
+                      success_count += 1
+              
+              print(f"\nFetched {success_count}/{len(tiles)} tiles successfully")
+          
+          if __name__ == '__main__':
+              main()
+          EOF
+          
+          chmod +x fetch_tiles.py
+          
+      - name: Fetch all tiles
+        run: python fetch_tiles.py
+        
+      - name: Upload tile data
+        uses: actions/upload-artifact@v4
+        with:
+          name: tile-data
+          path: data/
+          retention-days: 1
+          
+  data-packager:
+    name: Package Tile Data
+    runs-on: ubuntu-latest
+    needs: source-fetcher
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Download tile data
+        uses: actions/download-artifact@v4
+        with:
+          name: tile-data
+          path: data/
+          
+      - name: Create tile manifest
+        run: |
+          cat > data/manifest.json << 'EOF'
+          {
+            "generated": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "tiles": []
+          }
+          EOF
+          
+          # Add tile entries to manifest
+          for dir in data/*/; do
+            tile_id=$(basename "$dir")
+            if [ -f "$dir/metadata.txt" ]; then
+              echo "  Adding $tile_id to manifest"
+            fi
+          done
+          
+      - name: Commit tile data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add data/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update tile data [automated]"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Trigger tile-loader
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: tiles-updated

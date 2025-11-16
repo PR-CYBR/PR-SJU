@@ -1,0 +1,151 @@
+name: Tile Loader
+
+on:
+  repository_dispatch:
+    types: [tiles-updated]
+  workflow_dispatch:
+
+jobs:
+  prepare-bundles:
+    name: Prepare Tile JSON Bundles
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Check for tile data
+        id: check-data
+        run: |
+          if [ -d "data" ] && [ "$(ls -A data)" ]; then
+            echo "has-data=true" >> $GITHUB_OUTPUT
+            echo "Found tile data to process"
+          else
+            echo "has-data=false" >> $GITHUB_OUTPUT
+            echo "No tile data found"
+          fi
+          
+      - name: Create bundle script
+        if: steps.check-data.outputs.has-data == 'true'
+        run: |
+          cat > create_bundles.js << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          
+          function createTileBundles() {
+            const dataDir = 'data';
+            const outputDir = 'dash/tiles';
+            
+            // Create output directory
+            if (!fs.existsSync(outputDir)) {
+              fs.mkdirSync(outputDir, { recursive: true });
+            }
+            
+            // Read all tile directories
+            const tiles = fs.readdirSync(dataDir).filter(item => {
+              return fs.statSync(path.join(dataDir, item)).isDirectory();
+            });
+            
+            console.log(`Processing ${tiles.length} tiles...`);
+            
+            tiles.forEach(tileId => {
+              const tileDir = path.join(dataDir, tileId);
+              const metadataPath = path.join(tileDir, 'metadata.txt');
+              
+              if (!fs.existsSync(metadataPath)) {
+                console.log(`Skipping ${tileId} - no metadata`);
+                return;
+              }
+              
+              // Read metadata
+              const metadata = {};
+              const metadataContent = fs.readFileSync(metadataPath, 'utf8');
+              metadataContent.split('\n').forEach(line => {
+                const [key, ...valueParts] = line.split(':');
+                if (key && valueParts.length > 0) {
+                  metadata[key.trim()] = valueParts.join(':').trim();
+                }
+              });
+              
+              // Find the latest file
+              const files = fs.readdirSync(tileDir).filter(f => f.startsWith('latest.'));
+              if (files.length === 0) {
+                console.log(`Skipping ${tileId} - no data files`);
+                return;
+              }
+              
+              const latestFile = files[0];
+              const extension = path.extname(latestFile).slice(1);
+              
+              // Create tile bundle
+              const bundle = {
+                id: tileId,
+                url: metadata.url || '',
+                contentType: metadata.content_type || '',
+                size: parseInt(metadata.size) || 0,
+                hash: metadata.hash || '',
+                file: latestFile,
+                extension: extension,
+                updated: new Date().toISOString()
+              };
+              
+              // Write bundle JSON
+              const bundlePath = path.join(outputDir, `${tileId}.json`);
+              fs.writeFileSync(bundlePath, JSON.stringify(bundle, null, 2));
+              
+              console.log(`✓ Created bundle for ${tileId}`);
+              
+              // Copy image to assets if it's an image
+              if (['gif', 'png', 'jpg', 'jpeg'].includes(extension)) {
+                const assetsDir = 'dash/assets/img';
+                if (!fs.existsSync(assetsDir)) {
+                  fs.mkdirSync(assetsDir, { recursive: true });
+                }
+                
+                const srcPath = path.join(tileDir, latestFile);
+                const dstPath = path.join(assetsDir, `${tileId}.${extension}`);
+                fs.copyFileSync(srcPath, dstPath);
+                console.log(`  ✓ Copied image to assets`);
+              }
+            });
+            
+            console.log('Bundle creation complete!');
+          }
+          
+          createTileBundles();
+          EOF
+          
+      - name: Create tile bundles
+        if: steps.check-data.outputs.has-data == 'true'
+        run: node create_bundles.js
+        
+      - name: Commit bundles
+        if: steps.check-data.outputs.has-data == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add dash/tiles/ dash/assets/img/ || true
+          
+          if git diff --staged --quiet; then
+            echo "No bundle changes to commit"
+          else
+            git commit -m "Update tile bundles [automated]"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Trigger tile-updater
+        if: steps.check-data.outputs.has-data == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: bundles-ready
