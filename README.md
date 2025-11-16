@@ -1,124 +1,228 @@
-[![Spec-Kit Validation](https://github.com/PR-CYBR/spec-bootstrap/actions/workflows/spec-kit.yml/badge.svg?branch=main)](https://github.com/PR-CYBR/spec-bootstrap/actions/workflows/spec-kit.yml)  
-**Branch Purpose:** The `main` branch is the stable baseline representing production-ready code. All changes integrated through the CI/CD pipeline eventually land here.
-# Spec-Bootstrap  
-[![Spec-Kit Validation](https://github.com/PR-CYBR/spec-bootstrap/actions/workflows/spec-kit.yml/badge.svg)](https://github.com/PR-CYBR/spec-bootstrap/actions/workflows/spec-kit.yml)  
+[![Spec-Kit Validation](https://github.com/PR-CYBR/PR-SJU/actions/workflows/spec-kit.yml/badge.svg?branch=main)](https://github.com/PR-CYBR/PR-SJU/actions/workflows/spec-kit.yml)
 
-Spec-Bootstrap is a language agnostic template repository built on the Spec Kit specification-driven development framework. It provides a ready to use structure to capture your project’s constitution, specifications, implementation plans and tasks. This template ensures that your development process remains transparent, well‑documented, and consistent across projects.  
+# PR-SJU Dashboard
 
-## Usage  
-### Use as a Template  
-Click **Use this template** on the repository’s main page to scaffold a new project. GitHub will clone the files from this template (including the `.specify` directory and GitHub Actions workflows) into your new repository, so you can start specifying and planning your project immediately.  
+**San Juan Division - PR-CYBR**
 
-### Integrate into an Existing Project  
-To adopt Spec Kit in an existing repository, merge this repository into your project (via `git pull` or by copying files). Make sure to copy the `.specify` directory and `.github/workflows` folder into your project root. Adapt the `constitution.md`, `spec.md`, and `plan.md` files to match your project’s goals and update the tasks accordingly.  
+[![Spec-Kit Validation](https://github.com/PR-CYBR/PR-SJU/actions/workflows/spec-kit.yml/badge.svg)](https://github.com/PR-CYBR/PR-SJU/actions/workflows/spec-kit.yml)
 
-## Run Status Indicator  
-The badge above reflects the current status of the Spec Kit validation workflow on the `main` branch. It runs checks on required files, markdown syntax and link validation, and summarises tasks. A passing badge means the template structure is intact.  
+The PR-SJU Dashboard is a multi-profile ham radio and emergency operations dashboard system for the San Juan Division of Puerto Rico Cyber Operations (PR-CYBR). Built on the VA3HDL hamdashboard with enhanced features including dark mode, profile management, and automated tile updates.
 
-## Branching Strategy  
-This repository implements a comprehensive branching scheme to support specification-driven development. See [BRANCHING.md](BRANCHING.md) for detailed documentation on:  
-- Purpose and usage of each branch (spec, plan, design, impl, dev, main, test, stage, prod, pages, gh-pages, codex)  
-- Automated pull request workflows between branches  
-- Branch protection rules and best practices  
-- Development lifecycle flow from specifications through production  
+## 🚀 Live Dashboard
 
-## AI Driven Development  
-This repository is designed to be used not only by humans but also by AI coding agents. When using an AI agent to scaffold or extend your project:  
-- **Start with the spec** – Agents should read and, if necessary, refine the documents in `.specify/constitution.md`, `.specify/spec.md` and `.specify/plan.md` before writing any code.  
-- **Follow the phases** – Agents must honor the Spec Kit workflow: specify, plan, create tasks and then implement. This prevents "vibe coding" and ensures work is grounded in agreed requirements.  
-- **Update as you go** – If the AI agent makes design decisions or adds features, it should update the spec and plan documents to keep them living and reflective of the code.  
-- **Respect the Constitution** – The project’s constitution defines non‑negotiable rules (coding standards, testing expectations, security requirements). AI agents should adhere to these guidelines when generating code or documentation.  
+**Access the dashboard:** [https://pr-cybr.github.io/PR-SJU/](https://pr-cybr.github.io/PR-SJU/)
 
-## License  
-This project will be released under the [MIT License](LICENSE).  
+## 📋 Features
 
-## Quick Start  
-1. **Clone or Fork this repository**  
-  ```bash  
-  git clone https://github.com/PR-CYBR/spec-bootstrap.git  
-  cd spec-bootstrap  
-  ```  
+- **7 Operational Profiles** - Specialized dashboards for different operations
+- **Dark/Light Mode** - Toggle theme with persistent localStorage
+- **Real-time Updates** - Automated tile fetching every 15 minutes
+- **Mobile Responsive** - Works on desktop, tablet, and mobile devices
+- **Spec-Bootstrap Architecture** - Built with specification-driven development
 
-2. **Review the Constitution**  
-  ```bash  
-  cat .specify/constitution.md  
-  ```  
+## 🎯 Operational Profiles
 
-3. **Explore the Specifications**  
-  ```bash  
-  cat .specify/spec.md  
-  ```  
+### TOCOPS - Tactical Operations Center
+Emergency management and tactical coordination with weather radar, satellite imagery, and tropical weather monitoring.
 
-4. **Check the Implementation Plan**  
-  ```bash  
-  cat .specify/plan.md  
-  ```  
+### PR-DIV - Puerto Rico Division
+General ham radio operations featuring HF propagation, solar conditions, and amateur radio tools.
 
-5. **View Tasks**  
-  ```bash  
-  ls -la .specify/tasks/  
-  ```  
+### WATCHDOGS - Monitoring Operations
+Maritime, aviation, and communications monitoring with AIS, ADSB, and earthquake tracking.
 
-6. **Initialize Terraform Infrastructure** (Optional)  
-  All repositories derived from this template include a baseline Terraform configuration for PR-CYBR agent standardization:
-  ```bash
-  cd infra
-  terraform init -backend=false
-  terraform validate
-  terraform plan -input=false -var-file=variables.tfvars
-  ```
-  
-  Before running these commands:
-  - Update `infra/variables.tfvars` with your agent-specific values
-  - Set sensitive values via environment variables (e.g., `export TF_VAR_dockerhub_user="username"`)
-  - See `.specify/tasks/infra-bootstrap.md` for detailed instructions
-  
-  **Note**: Derived projects inherit this baseline automatically for PR-CYBR agent alignment.
+### INTEL-HUB - Intelligence Hub
+SIGINT, OSINT, and intelligence gathering with spectrum analysis and propagation monitoring.
 
-## Automated Provisioning  
-During initial provisioning of a new repository derived from this template, multiple draft pull requests are created to add the specification, plan and workflow files. Normally these PRs require manual review because branch protection rules on the default branch prevent automation from merging. To support fully autonomous initialization while preserving safety, this template includes an initial provisioning workflow (`initial-provision.yml`).  
-This workflow runs only once — when the repository has no prior commits or when triggered with `is_initial_provision` set to `true`. It will:  
-- Detect that the repository is in a bootstrap state.  
-- Temporarily disable branch protection on the default branch using the GitHub API.  
-- Mark any draft bootstrap pull requests as ready for review and merge them automatically.  
-- Reapply the previous branch protection settings immediately after the merges.  
-- Provision Terraform Cloud workspace (if `TFC_TOKEN` is configured).
-- Add a `bootstrap-complete` tag or commit annotation for auditability.  
-If automation is disabled or fails, you may still perform the first merge manually by approving the draft PRs. After the initial provisioning completes, the regular CI/CD workflows and branch protections govern subsequent development as usual. 
+### PR-SRN - San Juan Radio Network
+VHF/UHF operations and repeater monitoring with APRS and band condition tracking.
 
-### Terraform Cloud Auto-Setup
-When you create a new repository from this template:
-- The Spec-Bootstrap system automatically provisions a TFC workspace during initial provisioning.
-- It synchronizes baseline variables from `/infra` to Terraform Cloud.
-- The workspace is tagged with "spec-bootstrap" and the repository name.
-- Secrets and API tokens are never stored in code — only injected via TFC or GitHub Secrets.
+### PR-M3SH - Mesh Network
+Mesh networking, LoRa, and alternative communications including Meshtastic and WSPR.
 
-**Setup Requirements:**
-1. Add a `TFC_TOKEN` secret to your repository (Settings → Secrets and variables → Actions).
-2. Generate the token from Terraform Cloud: User Settings → Tokens → Create an API token.
-3. The initial provisioning workflow will automatically create and configure your workspace.
+### PR-SPOT - Satellite & Space Weather
+Satellite tracking and space weather monitoring with ISS position and solar activity.
 
-**Note:** If `TFC_TOKEN` is not configured, the TFC bootstrap step will be skipped with a warning. You can add the token later and manually trigger the `tfc-bootstrap.yml` workflow.
-2. **Review the Constitution**  
-  ```bash  
-  cat .specify/constitution.md  
-  ```  
-3. **Explore the Specifications**  
-  ```bash  
-  cat .specify/spec.md  
-  ```  
-4. **Check the Implementation Plan**  
-  ```bash  
-  cat .specify/plan.md  
-  ```  
-5. **View Tasks**  
-  ```bash  
-  ls -la .specify/tasks/  
-  ```
+## 🛠️ Local Development
 
-## Spec Kit Commands  
-The Spec Kit framework has a set of conceptual commands that are represented by files in this template:  
-- `/speckit.constitution` – defines project rules and non‑negotiables.  
-- `/speckit.specify` – describes what to build and why.  
-- `/speckit.plan` – outlines how to build it.  
-- `/speckit.tasks` – breaks the plan into actionable tasks.
+### Prerequisites
+- Modern web browser (Chrome, Firefox, Edge, Safari)
+- Optional: Local web server for development
+
+### Running Locally
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/PR-CYBR/PR-SJU.git
+   cd PR-SJU
+   ```
+
+2. **Serve the dashboard**
+   
+   Using Python:
+   ```bash
+   cd dash
+   python3 -m http.server 8000
+   ```
+   
+   Using Node.js:
+   ```bash
+   cd dash
+   npx http-server -p 8000
+   ```
+
+3. **Open in browser**
+   ```
+   http://localhost:8000
+   ```
+
+### Development Structure
+
+```
+/
+├── dash/                    # Dashboard application
+│   ├── index.html          # Entry point
+│   ├── hamdash.html        # Main dashboard
+│   ├── config.js           # Default configuration
+│   ├── js/                 # JavaScript files
+│   ├── css/                # Stylesheets
+│   └── assets/             # Images and assets
+├── profiles/               # Profile configurations
+│   ├── TOCOPS/
+│   ├── PR-DIV/
+│   ├── WATCHDOGS/
+│   ├── INTEL-HUB/
+│   ├── PR-SRN/
+│   ├── PR-M3SH/
+│   └── PR-SPOT/
+├── sources/                # Tile source URLs
+│   └── sources.md
+└── .github/workflows/      # Automation workflows
+    ├── tile-worker.yml     # Fetch tile data
+    ├── tile-loader.yml     # Process and bundle
+    ├── tile-updater.yml    # Update dashboard
+    └── pages-deploy.yml    # Deploy to GitHub Pages
+```
+
+## 🔄 Tile Automation
+
+The dashboard uses a three-stage workflow system:
+
+### 1. Tile Worker (tile-worker.yml)
+- Runs every 15 minutes
+- Parses `sources/sources.md` for tile URLs
+- Fetches latest data from each source
+- Stores data in `/data/<tile-id>/` directories
+
+### 2. Tile Loader (tile-loader.yml)
+- Triggered when tiles are updated
+- Creates JSON bundles for each tile
+- Copies images to dashboard assets
+- Prepares data for display
+
+### 3. Tile Updater (tile-updater.yml)
+- Updates documentation
+- Posts notifications (Slack, Notion)
+- Maintains tile backlog
+- Generates status reports
+
+## 📖 Profile Selection
+
+### In the Dashboard
+
+1. Click the **Settings** button (gear icon)
+2. Find the **Profile Selector** dropdown at the top
+3. Choose your profile from:
+   - TOCOPS
+   - PR-DIV
+   - WATCHDOGS
+   - INTEL-HUB
+   - PR-SRN
+   - PR-M3SH
+   - PR-SPOT
+4. Profile loads automatically with custom tiles and menu
+
+### Profile Persistence
+
+Your selected profile is saved to browser localStorage and will be remembered on your next visit.
+
+## 🌓 Dark Mode
+
+Toggle between dark and light themes using the button in the top-right corner (🌙/☀️). Your preference is saved automatically.
+
+## 📚 Spec-Bootstrap Integration
+
+This repository follows the Spec-Bootstrap framework for specification-driven development.
+
+### Key Documents
+
+- **[.specify/constitution.md](.specify/constitution.md)** - Project principles and governance
+- **[.specify/spec.md](.specify/spec.md)** - Technical specifications
+- **[.specify/plan.md](.specify/plan.md)** - Implementation plan
+- **[BRANCHING.md](BRANCHING.md)** - Branching strategy
+
+### Branching Strategy
+
+This repository implements a comprehensive branching scheme to support specification-driven development. See [BRANCHING.md](BRANCHING.md) for detailed documentation on:
+
+- Purpose and usage of each branch (spec, plan, design, impl, dev, main, test, stage, prod, pages, gh-pages, codex)
+- Automated pull request workflows between branches
+- Branch protection rules and best practices
+- Development lifecycle flow from specifications through production
+
+### Workflow
+
+Work flows systematically through branches:
+
+```
+spec → plan → impl → dev → main → stage → prod → pages
+         ↓                   ↑
+       design ──────────────┘
+       codex ───────────────────────────────────→ pages
+```
+
+## 🤖 AI-Driven Development
+
+This repository is designed to be used not only by humans but also by AI coding agents. When using an AI agent to scaffold or extend your project:
+
+- **Start with the spec** – Agents should read and refine documents in `.specify/` before writing code
+- **Follow the phases** – Honor the Spec Kit workflow: specify, plan, create tasks, then implement
+- **Update as you go** – If the agent makes design decisions or adds features, update spec and plan documents
+- **Respect the Constitution** – The project's constitution defines non-negotiable rules that agents must follow
+
+## 📝 Contributing
+
+1. Fork the repository
+2. Create a feature branch following the branching strategy
+3. Update specifications and plans as needed
+4. Submit a pull request to the appropriate branch
+5. Ensure all workflows pass
+
+## 📄 License
+
+This project is released under the [MIT License](LICENSE).
+
+## 🆘 Support
+
+For issues, questions, or contributions, please:
+
+1. Check existing [Issues](https://github.com/PR-CYBR/PR-SJU/issues)
+2. Review the [Discussions](https://github.com/PR-CYBR/PR-SJU/discussions)
+3. Consult the [.specify/](.specify/) documentation
+
+## 🔗 Links
+
+- **Live Dashboard:** [https://pr-cybr.github.io/PR-SJU/](https://pr-cybr.github.io/PR-SJU/)
+- **Source Repository:** [https://github.com/PR-CYBR/PR-SJU](https://github.com/PR-CYBR/PR-SJU)
+- **VA3HDL Hamdashboard:** [https://github.com/VA3HDL/hamdashboard](https://github.com/VA3HDL/hamdashboard)
+- **PR-CYBR:** [https://github.com/PR-CYBR](https://github.com/PR-CYBR)
+
+## 🙏 Credits
+
+- **Dashboard Base:** VA3HDL hamdashboard by Pablo Sabbag
+- **Framework:** Spec-Bootstrap specification-driven development
+- **Organization:** PR-CYBR - Puerto Rico Cyber Operations
+
+---
+
+**Built with ❤️ for the San Juan Division**
