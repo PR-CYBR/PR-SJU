@@ -37,7 +37,25 @@ jobs:
       - name: Copy dashboard files to _site
         run: |
           echo "Copying dash/ to _site/..."
+          
+          # Copy all files from dash/ to _site/ root
           cp -r dash/* _site/
+          
+          # Ensure js/ css/ and assets/ directories exist if they're in dash/
+          if [ -d "dash/js" ]; then
+            mkdir -p _site/js
+            cp -r dash/js/* _site/js/ 2>/dev/null || echo "No JS files to copy"
+          fi
+          
+          if [ -d "dash/css" ]; then
+            mkdir -p _site/css
+            cp -r dash/css/* _site/css/ 2>/dev/null || echo "No CSS files to copy"
+          fi
+          
+          if [ -d "dash/assets" ]; then
+            mkdir -p _site/assets
+            cp -r dash/assets/* _site/assets/ 2>/dev/null || echo "No asset files to copy"
+          fi
           
           echo "Files copied to _site:"
           ls -la _site/
@@ -160,6 +178,86 @@ jobs:
           
           echo "✓ index.html validation complete"
           
+      - name: Validate all required files exist
+        run: |
+          echo "Validating required files in _site/..."
+          
+          # Check for required HTML files
+          required_files=(
+            "_site/index.html"
+            "_site/hamdash.html"
+          )
+          
+          for file in "${required_files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✓ $file exists"
+            else
+              echo "✗ $file is missing!"
+              exit 1
+            fi
+          done
+          
+          # Check for required JavaScript files
+          if [ -f "_site/config.js" ] || [ -f "_site/satellite.js" ] || [ -f "_site/wheelzoom.js" ]; then
+            echo "✓ JavaScript files present"
+          else
+            echo "⚠️  Warning: Some JavaScript files may be missing"
+          fi
+          
+          # Check for required directories
+          required_dirs=(
+            "_site/profiles"
+            "_site/sources"
+          )
+          
+          for dir in "${required_dirs[@]}"; do
+            if [ -d "$dir" ]; then
+              echo "✓ $dir directory exists"
+            else
+              echo "✗ $dir directory is missing!"
+              exit 1
+            fi
+          done
+          
+          echo "✓ All required files and directories exist"
+          
+      - name: Validate profile directories are not empty
+        run: |
+          echo "Validating profile directories..."
+          
+          if [ ! -d "_site/profiles" ]; then
+            echo "✗ profiles directory missing!"
+            exit 1
+          fi
+          
+          profile_count=$(find _site/profiles -mindepth 1 -maxdepth 1 -type d | wc -l)
+          
+          if [ "$profile_count" -eq 0 ]; then
+            echo "✗ No profile directories found in _site/profiles!"
+            exit 1
+          fi
+          
+          echo "✓ Found $profile_count profile directories"
+          
+          # Validate each profile directory
+          for profile_dir in _site/profiles/*/; do
+            if [ ! -d "$profile_dir" ]; then
+              continue
+            fi
+            
+            profile_name=$(basename "$profile_dir")
+            
+            # Check if directory is empty
+            if [ -z "$(ls -A "$profile_dir")" ]; then
+              echo "✗ Profile directory $profile_name is empty!"
+              exit 1
+            fi
+            
+            echo "✓ Profile $profile_name is not empty"
+          done
+          
+          echo "✓ All profile directories validated"
+          
       - name: Validate hamdash.html exists
         run: |
           echo "Checking for hamdash.html..."
@@ -184,6 +282,19 @@ jobs:
           echo "JS/CSS minification skipped (can be added later if needed)"
           echo "Current file sizes:"
           du -sh _site/*.js _site/*.css 2>/dev/null || echo "No JS/CSS files found in root"
+          
+      - name: Display _site directory tree
+        run: |
+          echo "=== _site Directory Tree ==="
+          tree -L 3 _site/ || find _site -type f -o -type d | sort | sed 's|[^/]*/| |g'
+          
+      - name: Display first 20 lines of HTML files
+        run: |
+          echo "=== First 20 lines of index.html ==="
+          head -n 20 _site/index.html
+          echo ""
+          echo "=== First 20 lines of hamdash.html ==="
+          head -n 20 _site/hamdash.html
           
       - name: Create build summary
         run: |
