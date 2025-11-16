@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy Dashboard to Pages Branch
+  build:
+    name: Build Dashboard
     runs-on: ubuntu-latest
     
     steps:
@@ -26,27 +26,64 @@ jobs:
           ref: prod
           fetch-depth: 0
           
-      - name: Copy dashboard to temporary directory
+      - name: Create _site directory
         run: |
-          echo "Creating temporary directory for dashboard files..."
-          mkdir -p /tmp/dashboard-deploy
+          echo "Creating _site directory structure..."
+          mkdir -p _site
           
-          # Copy everything inside /dash/ to temp directory
-          cp -r dash/* /tmp/dashboard-deploy/
+      - name: Copy dashboard files to _site
+        run: |
+          echo "Copying dash/ to _site/..."
+          cp -r dash/* _site/
           
-          # Copy profile configurations
-          mkdir -p /tmp/dashboard-deploy/profiles
-          cp -r profiles/* /tmp/dashboard-deploy/profiles/
+      - name: Copy profiles to _site
+        run: |
+          echo "Copying profiles/ to _site/profiles/..."
+          mkdir -p _site/profiles
+          cp -r profiles/* _site/profiles/
           
-          echo "Dashboard files copied to temporary directory"
+      - name: Copy sources to _site
+        run: |
+          echo "Copying sources/ to _site/sources/..."
+          mkdir -p _site/sources
+          cp -r sources/* _site/sources/
+          
+      - name: Upload _site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-site
+          path: _site/
+          retention-days: 1
+          
+  deploy:
+    name: Deploy Dashboard to Pages Branch
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: prod
+          fetch-depth: 0
+          
+      - name: Download _site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dashboard-site
+          path: /tmp/dashboard-deploy
+          
+      - name: Display downloaded artifact contents
+        run: |
+          echo "Dashboard artifact downloaded:"
           ls -la /tmp/dashboard-deploy/
           
-      - name: Switch to pages branch
+      - name: Switch to pages branch or create if missing
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Check if pages branch exists remotely
+          # Always check if pages branch exists remotely
           if git ls-remote --heads origin pages | grep pages; then
             echo "Pages branch exists, checking it out..."
             git fetch origin pages
@@ -54,9 +91,11 @@ jobs:
           else
             echo "Pages branch does not exist, creating it..."
             git checkout --orphan pages
+            # Remove all files from the new orphan branch
+            git rm -rf . || true
           fi
           
-      - name: Clear pages branch
+      - name: Clear pages branch (delete ALL files except .git)
         run: |
           echo "Removing all files except .git directory..."
           # Remove all files and directories except .git

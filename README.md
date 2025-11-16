@@ -251,6 +251,112 @@ spec → plan → impl → dev → main → stage → prod → pages
        codex ───────────────────────────────────→ pages
 ```
 
+## 🌐 GitHub Pages Deployment
+
+The PR-SJU Dashboard is automatically deployed to GitHub Pages using a multi-stage workflow system.
+
+### Deployment Flow
+
+1. **Dashboard Build (dash-build.yml)** - Triggered on changes to:
+   - `/dash/**` - Dashboard files
+   - `/profiles/**` - Profile configurations
+   - `/sources/**` - Tile source definitions
+   
+   This workflow:
+   - Copies dashboard files to `_site/` directory
+   - Validates HTML structure and profile configurations
+   - Ensures proper relative paths for GitHub Pages
+   - Uploads `_site` as an artifact for deployment
+
+2. **Pages Trigger (pages-trigger.yml)** - Automatically triggered when:
+   - Changes are pushed to `prod` branch
+   - Changes are pushed to `tile-data` branch
+   - Dashboard, profile, or source files are modified
+   
+   This workflow:
+   - Automatically calls the pages-deploy workflow
+   - Can be manually triggered via workflow_dispatch
+
+3. **Pages Deploy (pages-deploy.yml)** - Deploys to GitHub Pages:
+   - Downloads the `_site` artifact from dash-build
+   - Checks out or creates the `pages` branch
+   - Clears all files except `.git`
+   - Copies `_site/*` to the root of the `pages` branch
+   - Commits and pushes changes
+   - Makes the dashboard accessible at: https://pr-cybr.github.io/PR-SJU/
+
+### Manual Deployment
+
+To manually trigger a deployment:
+
+1. Go to the [Actions tab](https://github.com/PR-CYBR/PR-SJU/actions)
+2. Select "Pages Trigger" workflow
+3. Click "Run workflow"
+4. Select the `prod` branch
+5. Click "Run workflow" button
+
+## 🔧 Required Workflows
+
+The repository includes several automated workflows for CI/CD:
+
+### Build & Validation Workflows
+
+- **docker-build.yml** - Validates Docker container builds
+  - Triggers on: Push/PR to dev, main, stage, prod
+  - Builds Dockerfile
+  - Runs container health checks
+  - Validates profile loading via DEFAULT_PROFILE
+  - Validates index.html exists and loads
+
+- **dash-build.yml** - Builds dashboard for deployment
+  - Triggers on: Changes to dash/, profiles/, sources/
+  - Creates _site directory structure
+  - Validates HTML and profile configurations
+  - Uploads build artifact
+
+### Deployment Workflows
+
+- **pages-trigger.yml** - Triggers GitHub Pages deployment
+  - Triggers on: Push to prod, tile-data, or dashboard changes
+  - Automatically calls pages-deploy workflow
+
+- **pages-deploy.yml** - Deploys to GitHub Pages
+  - Deploys dashboard to pages branch
+  - Makes site available at pr-cybr.github.io/PR-SJU
+
+### Tile Automation Workflows
+
+- **tile-worker.yml** - Fetches tile data every 15 minutes
+  - Parses sources/sources.md for tile URLs
+  - Downloads latest tile data
+  - Stores in data/ directory
+  - **Only pushes to tile-data branch**
+
+- **tile-loader.yml** - Processes tile data
+  - Creates JSON bundles for each tile
+  - Copies images to dashboard assets
+  - **Only pushes to tile-data branch**
+
+- **tile-updater.yml** - Updates documentation
+  - Maintains tile backlog
+  - Generates status reports
+  - **Only pushes to tile-data branch**
+
+- **tile-data-verify.yml** - Validates tile data integrity
+  - Triggers on: Push to tile-data branch
+  - Validates file existence and sizes
+  - Checks MIME types
+  - Verifies metadata.txt for each tile
+  - Fails workflow if any tile is invalid
+
+### Branch Protection
+
+The tile automation workflows (tile-worker, tile-loader, tile-updater) are configured to:
+- ✅ Push ONLY to the `tile-data` branch
+- ❌ Never push to: main, dev, stage, prod, or pages
+
+This ensures tile automation cannot accidentally affect production or deployment branches.
+
 ## 🤖 AI-Driven Development
 
 This repository is designed to be used not only by humans but also by AI coding agents. When using an AI agent to scaffold or extend your project:

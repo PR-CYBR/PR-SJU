@@ -1,0 +1,139 @@
+name: Docker Build and Validate
+
+on:
+  push:
+    branches: [ "dev", "main", "stage", "prod" ]
+  pull_request:
+    branches: [ "dev", "main", "stage", "prod" ]
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build:
+    name: Build and Validate Docker Container
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: pr-sju-dash:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Run container for testing
+        run: |
+          docker run -d \
+            --name pr-sju-test \
+            -p 8080:80 \
+            -e DEFAULT_PROFILE=PR-DIV \
+            pr-sju-dash:test
+          
+          # Wait for container to be ready
+          sleep 5
+          
+      - name: Container health check via curl
+        run: |
+          echo "Testing container health..."
+          max_attempts=10
+          attempt=0
+          
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -f http://localhost:8080/ >/dev/null 2>&1; then
+              echo "✓ Container is healthy and responding"
+              exit 0
+            fi
+            attempt=$((attempt + 1))
+            echo "Waiting for container... (attempt $attempt/$max_attempts)"
+            sleep 2
+          done
+          
+          echo "✗ Container failed health check"
+          docker logs pr-sju-test
+          exit 1
+          
+      - name: Validate index.html exists and loads
+        run: |
+          echo "Testing index.html accessibility..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/index.html)
+          
+          if [ "$response" = "200" ]; then
+            echo "✓ index.html loads successfully (HTTP $response)"
+          else
+            echo "✗ index.html failed to load (HTTP $response)"
+            exit 1
+          fi
+          
+          # Verify content is HTML
+          content=$(curl -s http://localhost:8080/index.html)
+          if echo "$content" | grep -q "<!DOCTYPE html>"; then
+            echo "✓ index.html contains valid HTML content"
+          else
+            echo "✗ index.html does not contain valid HTML"
+            exit 1
+          fi
+          
+      - name: Validate hamdash.html exists and loads
+        run: |
+          echo "Testing hamdash.html accessibility..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/hamdash.html)
+          
+          if [ "$response" = "200" ]; then
+            echo "✓ hamdash.html loads successfully (HTTP $response)"
+          else
+            echo "✗ hamdash.html failed to load (HTTP $response)"
+            exit 1
+          fi
+          
+      - name: Validate profile loading via DEFAULT_PROFILE
+        run: |
+          echo "Testing DEFAULT_PROFILE injection..."
+          
+          # Check that DEFAULT_PROFILE is injected into hamdash.html
+          content=$(curl -s http://localhost:8080/hamdash.html)
+          
+          if echo "$content" | grep -q "window.DEFAULT_PROFILE = 'PR-DIV'"; then
+            echo "✓ DEFAULT_PROFILE is properly injected"
+          else
+            echo "✗ DEFAULT_PROFILE injection failed"
+            echo "Content preview:"
+            echo "$content" | grep -A 5 -B 5 "DEFAULT_PROFILE" || echo "DEFAULT_PROFILE not found"
+            exit 1
+          fi
+          
+      - name: Validate profile directories are accessible
+        run: |
+          echo "Testing profile directory access..."
+          
+          profiles=("TOCOPS" "PR-DIV" "WATCHDOGS" "INTEL-HUB" "PR-SRN" "PR-M3SH" "PR-SPOT")
+          
+          for profile in "${profiles[@]}"; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/profiles/$profile/config.js)
+            if [ "$response" = "200" ]; then
+              echo "✓ Profile $profile is accessible"
+            else
+              echo "✗ Profile $profile failed (HTTP $response)"
+              exit 1
+            fi
+          done
+          
+      - name: Display container logs
+        if: always()
+        run: |
+          echo "=== Container Logs ==="
+          docker logs pr-sju-test
+          
+      - name: Stop and remove test container
+        if: always()
+        run: |
+          docker stop pr-sju-test || true
+          docker rm pr-sju-test || true

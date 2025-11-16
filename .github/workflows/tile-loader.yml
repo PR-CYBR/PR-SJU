@@ -14,6 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Cleanup data directory
+        run: |
+          rm -rf data/ || true
+          
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -135,7 +139,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Check if tile-data branch exists, create if not
+          # ONLY push to tile-data branch - never to main, dev, stage, prod, or pages
           if git ls-remote --heads origin tile-data | grep tile-data; then
             echo "tile-data branch exists, checking it out..."
             git fetch origin tile-data
@@ -151,6 +155,7 @@ jobs:
             echo "No bundle changes to commit"
           else
             git commit -m "Update tile bundles [automated]"
+            # Push ONLY to tile-data branch
             git push origin tile-data
           fi
         env:

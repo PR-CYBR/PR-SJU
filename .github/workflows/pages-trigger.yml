@@ -1,0 +1,64 @@
+name: Pages Trigger
+
+on:
+  push:
+    branches:
+      - prod
+      - tile-data
+    paths:
+      - 'dash/**'
+      - 'profiles/**'
+      - 'sources/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  trigger-deployment:
+    name: Trigger Pages Deployment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Trigger pages-deploy workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log('Triggering pages-deploy workflow...');
+            
+            try {
+              const result = await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'pages-deploy.yml',
+                ref: 'prod'
+              });
+              
+              console.log('✓ Successfully triggered pages-deploy workflow');
+              console.log(`Status: ${result.status}`);
+            } catch (error) {
+              console.error('✗ Failed to trigger pages-deploy workflow');
+              console.error(`Error: ${error.message}`);
+              throw error;
+            }
+            
+      - name: Wait for deployment to start
+        run: |
+          echo "Waiting for pages-deploy workflow to start..."
+          sleep 10
+          
+      - name: Display trigger summary
+        run: |
+          echo "✅ Pages deployment triggered successfully!"
+          echo ""
+          echo "Trigger details:"
+          echo "  Branch: ${{ github.ref_name }}"
+          echo "  Commit: ${{ github.sha }}"
+          echo "  Actor: ${{ github.actor }}"
+          echo ""
+          echo "The pages-deploy workflow should now be running."
+          echo "Check the Actions tab to monitor deployment progress."

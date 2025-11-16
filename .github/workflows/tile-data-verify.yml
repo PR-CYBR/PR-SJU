@@ -1,0 +1,182 @@
+name: Tile Data Verification
+
+on:
+  push:
+    branches: [ "tile-data" ]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify Tile Data Integrity
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout tile-data branch
+        uses: actions/checkout@v4
+        with:
+          ref: tile-data
+          
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y file
+          
+      - name: Validate tile data structure
+        id: validate
+        run: |
+          echo "Starting tile data verification..."
+          
+          # Initialize counters
+          total_tiles=0
+          valid_tiles=0
+          invalid_tiles=0
+          error_log=""
+          
+          # Check if data directory exists
+          if [ ! -d "data" ]; then
+            echo "⚠️  No data directory found - this may be a new branch"
+            echo "validation_result=warning" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Iterate through all tile directories
+          for tile_dir in data/*/; do
+            if [ ! -d "$tile_dir" ]; then
+              continue
+            fi
+            
+            tile_id=$(basename "$tile_dir")
+            total_tiles=$((total_tiles + 1))
+            tile_valid=true
+            tile_errors=""
+            
+            echo "Checking tile: $tile_id"
+            
+            # Check for metadata.txt
+            if [ ! -f "$tile_dir/metadata.txt" ]; then
+              tile_valid=false
+              tile_errors="${tile_errors}\n  ✗ Missing metadata.txt"
+            else
+              # Validate metadata.txt is not empty
+              if [ ! -s "$tile_dir/metadata.txt" ]; then
+                tile_valid=false
+                tile_errors="${tile_errors}\n  ✗ metadata.txt is empty (0 bytes)"
+              else
+                echo "  ✓ metadata.txt exists and has content"
+              fi
+            fi
+            
+            # Find data files (latest.*)
+            data_files=$(find "$tile_dir" -name "latest.*" -type f)
+            
+            if [ -z "$data_files" ]; then
+              tile_valid=false
+              tile_errors="${tile_errors}\n  ✗ No data files found (latest.*)"
+            else
+              for data_file in $data_files; do
+                file_name=$(basename "$data_file")
+                
+                # Check file is not 0 bytes
+                if [ ! -s "$data_file" ]; then
+                  tile_valid=false
+                  tile_errors="${tile_errors}\n  ✗ File $file_name is empty (0 bytes)"
+                else
+                  file_size=$(wc -c < "$data_file")
+                  echo "  ✓ $file_name exists ($file_size bytes)"
+                  
+                  # Validate MIME type
+                  mime_type=$(file --mime-type -b "$data_file")
+                  
+                  case "$mime_type" in
+                    image/jpeg|image/gif|image/png|text/html|text/plain)
+                      echo "  ✓ Valid MIME type: $mime_type"
+                      ;;
+                    *)
+                      echo "  ⚠️  Unexpected MIME type: $mime_type"
+                      # Don't fail for unexpected but potentially valid types
+                      ;;
+                  esac
+                fi
+              done
+            fi
+            
+            # Update counters
+            if [ "$tile_valid" = true ]; then
+              valid_tiles=$((valid_tiles + 1))
+              echo "  ✅ Tile $tile_id is valid"
+            else
+              invalid_tiles=$((invalid_tiles + 1))
+              error_log="${error_log}\n❌ Tile $tile_id has errors:${tile_errors}"
+              echo "  ❌ Tile $tile_id has validation errors"
+            fi
+            
+            echo ""
+          done
+          
+          # Create summary report
+          echo "=== Tile Data Verification Summary ===" > verification_report.txt
+          echo "Date: $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)" >> verification_report.txt
+          echo "Branch: tile-data" >> verification_report.txt
+          echo "Commit: ${{ github.sha }}" >> verification_report.txt
+          echo "" >> verification_report.txt
+          echo "Total tiles: $total_tiles" >> verification_report.txt
+          echo "Valid tiles: $valid_tiles" >> verification_report.txt
+          echo "Invalid tiles: $invalid_tiles" >> verification_report.txt
+          echo "" >> verification_report.txt
+          
+          if [ $invalid_tiles -gt 0 ]; then
+            echo "Errors found:" >> verification_report.txt
+            echo -e "$error_log" >> verification_report.txt
+          fi
+          
+          # Display summary
+          cat verification_report.txt
+          
+          # Save outputs
+          echo "total_tiles=$total_tiles" >> $GITHUB_OUTPUT
+          echo "valid_tiles=$valid_tiles" >> $GITHUB_OUTPUT
+          echo "invalid_tiles=$invalid_tiles" >> $GITHUB_OUTPUT
+          
+          # Determine result
+          if [ $total_tiles -eq 0 ]; then
+            echo "validation_result=warning" >> $GITHUB_OUTPUT
+          elif [ $invalid_tiles -gt 0 ]; then
+            echo "validation_result=failure" >> $GITHUB_OUTPUT
+          else
+            echo "validation_result=success" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Upload verification report
+        uses: actions/upload-artifact@v4
+        with:
+          name: tile-verification-report
+          path: verification_report.txt
+          retention-days: 30
+          
+      - name: Check validation result
+        run: |
+          result="${{ steps.validate.outputs.validation_result }}"
+          
+          echo "Validation result: $result"
+          
+          if [ "$result" = "failure" ]; then
+            echo ""
+            echo "❌ Tile data verification FAILED"
+            echo ""
+            echo "Found ${{ steps.validate.outputs.invalid_tiles }} invalid tile(s) out of ${{ steps.validate.outputs.total_tiles }} total tiles."
+            echo ""
+            echo "Please review the verification report artifact for details."
+            exit 1
+          elif [ "$result" = "warning" ]; then
+            echo ""
+            echo "⚠️  Tile data verification completed with warnings"
+            echo ""
+            echo "No tile data found or data directory is empty."
+            echo "This is normal for new branches."
+          else
+            echo ""
+            echo "✅ All ${{ steps.validate.outputs.total_tiles }} tiles validated successfully!"
+            echo ""
+          fi

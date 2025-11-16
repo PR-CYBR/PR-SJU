@@ -1,0 +1,214 @@
+name: Dashboard Build
+
+on:
+  push:
+    branches: [ "dev", "main", "prod" ]
+    paths:
+      - 'dash/**'
+      - 'profiles/**'
+      - 'sources/**'
+      - '.github/workflows/dash-build.yml'
+  pull_request:
+    branches: [ "dev", "main", "prod" ]
+    paths:
+      - 'dash/**'
+      - 'profiles/**'
+      - 'sources/**'
+      - '.github/workflows/dash-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Dashboard for GitHub Pages
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Create _site directory
+        run: |
+          echo "Creating _site directory structure..."
+          mkdir -p _site
+          
+      - name: Copy dashboard files to _site
+        run: |
+          echo "Copying dash/ to _site/..."
+          cp -r dash/* _site/
+          
+          echo "Files copied to _site:"
+          ls -la _site/
+          
+          echo ""
+          echo "SITE STRUCTURE:"
+          find _site -maxdepth 4 -type f | sort
+          
+      - name: Copy profiles to _site
+        run: |
+          echo "Copying profiles/ to _site/profiles/..."
+          mkdir -p _site/profiles
+          cp -r profiles/* _site/profiles/
+          
+          echo "Profiles copied:"
+          ls -la _site/profiles/
+          
+      - name: Copy sources to _site
+        run: |
+          echo "Copying sources/ to _site/sources/..."
+          mkdir -p _site/sources
+          cp -r sources/* _site/sources/
+          
+          echo "Sources copied:"
+          ls -la _site/sources/
+          
+      - name: Validate relative paths for GitHub Pages
+        run: |
+          echo "Validating HTML files for relative paths..."
+          
+          # Check index.html for any absolute paths that might break on GitHub Pages
+          if [ -f "_site/index.html" ]; then
+            echo "Checking index.html..."
+            
+            # Look for common issues
+            if grep -q 'href="/[^/]' _site/index.html; then
+              echo "⚠️  Warning: Found potential absolute paths in index.html"
+              grep 'href="/[^/]' _site/index.html || true
+            else
+              echo "✓ index.html paths look good"
+            fi
+          fi
+          
+          # Check hamdash.html
+          if [ -f "_site/hamdash.html" ]; then
+            echo "Checking hamdash.html..."
+            
+            if grep -q 'href="/[^/]' _site/hamdash.html; then
+              echo "⚠️  Warning: Found potential absolute paths in hamdash.html"
+              grep 'href="/[^/]' _site/hamdash.html || true
+            else
+              echo "✓ hamdash.html paths look good"
+            fi
+          fi
+          
+      - name: Validate profile loader
+        run: |
+          echo "Validating profile loader in config.js..."
+          
+          if [ -f "_site/config.js" ]; then
+            echo "✓ config.js exists"
+            
+            # Basic validation that config.js is not empty
+            if [ -s "_site/config.js" ]; then
+              echo "✓ config.js is not empty"
+              echo "Size: $(wc -c < _site/config.js) bytes"
+            else
+              echo "✗ config.js is empty"
+              exit 1
+            fi
+          else
+            echo "⚠️  Warning: config.js not found (may be in profiles)"
+          fi
+          
+          # Validate that all profiles have config.js
+          echo "Checking profile configurations..."
+          for profile_dir in _site/profiles/*/; do
+            profile_name=$(basename "$profile_dir")
+            if [ -f "$profile_dir/config.js" ]; then
+              echo "✓ Profile $profile_name has config.js"
+            else
+              echo "✗ Profile $profile_name is missing config.js"
+              exit 1
+            fi
+          done
+          
+      - name: Ensure index.html is valid
+        run: |
+          echo "Validating index.html structure..."
+          
+          if [ ! -f "_site/index.html" ]; then
+            echo "✗ index.html not found!"
+            exit 1
+          fi
+          
+          # Check for DOCTYPE (case-insensitive)
+          if grep -iq "<!DOCTYPE html>" _site/index.html; then
+            echo "✓ index.html has DOCTYPE declaration"
+          else
+            echo "✗ index.html missing DOCTYPE"
+            exit 1
+          fi
+          
+          # Check for basic HTML structure
+          if grep -q "<html" _site/index.html && \
+             grep -q "<head>" _site/index.html && \
+             grep -q "<body>" _site/index.html; then
+            echo "✓ index.html has valid HTML structure"
+          else
+            echo "✗ index.html missing required HTML elements"
+            exit 1
+          fi
+          
+          # Check for title
+          if grep -q "<title>" _site/index.html; then
+            echo "✓ index.html has title element"
+          else
+            echo "⚠️  Warning: index.html missing title element"
+          fi
+          
+          echo "✓ index.html validation complete"
+          
+      - name: Validate hamdash.html exists
+        run: |
+          echo "Checking for hamdash.html..."
+          
+          if [ -f "_site/hamdash.html" ]; then
+            echo "✓ hamdash.html exists"
+            
+            # Basic validation (case-insensitive DOCTYPE check)
+            if grep -iq "<!DOCTYPE html>" _site/hamdash.html; then
+              echo "✓ hamdash.html has DOCTYPE declaration"
+            else
+              echo "✗ hamdash.html missing DOCTYPE"
+              exit 1
+            fi
+          else
+            echo "✗ hamdash.html not found!"
+            exit 1
+          fi
+          
+      - name: Optionally minify JS/CSS (placeholder)
+        run: |
+          echo "JS/CSS minification skipped (can be added later if needed)"
+          echo "Current file sizes:"
+          du -sh _site/*.js _site/*.css 2>/dev/null || echo "No JS/CSS files found in root"
+          
+      - name: Create build summary
+        run: |
+          echo "=== Dashboard Build Summary ===" > _site/BUILD_INFO.txt
+          echo "Build Date: $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)" >> _site/BUILD_INFO.txt
+          echo "Git Commit: ${{ github.sha }}" >> _site/BUILD_INFO.txt
+          echo "Git Branch: ${{ github.ref_name }}" >> _site/BUILD_INFO.txt
+          echo "" >> _site/BUILD_INFO.txt
+          echo "Files:" >> _site/BUILD_INFO.txt
+          find _site -type f | sort >> _site/BUILD_INFO.txt
+          
+          echo "Build summary created:"
+          cat _site/BUILD_INFO.txt
+          
+      - name: Upload _site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-site
+          path: _site/
+          retention-days: 30
+          
+      - name: Display build completion
+        run: |
+          echo "✅ Dashboard build complete!"
+          echo ""
+          echo "Artifact 'dashboard-site' uploaded with contents:"
+          echo "Total files: $(find _site -type f | wc -l)"
+          echo "Total size: $(du -sh _site | cut -f1)"
