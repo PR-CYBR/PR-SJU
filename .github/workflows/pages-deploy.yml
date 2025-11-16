@@ -23,8 +23,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-main: prod
-       mainfetch-depth: 0
+          ref: main
+          fetch-depth: 0
           
       - name: Create _site directory
         run: |
@@ -64,7 +64,7 @@ main: prod
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: pages
           fetch-depth: 0
           
       - name: Download _site artifact
@@ -82,8 +82,6 @@ main: prod
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Always check if pages branch exists remotely
           if git ls-remote --heads origin pages | grep pages; then
             echo "Pages branch exists, checking it out..."
             git fetch origin pages
@@ -91,16 +89,13 @@ main: prod
           else
             echo "Pages branch does not exist, creating it..."
             git checkout --orphan pages
-            # Remove all files from the new orphan branch
             git rm -rf . || true
           fi
           
       - name: Clear pages branch (delete ALL files except .git)
         run: |
           echo "Removing all files except .git directory..."
-          # Remove all files and directories except .git
           find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          
           echo "Pages branch cleaned"
           ls -la
           
@@ -108,110 +103,44 @@ main: prod
         run: |
           echo "Copying dashboard files to pages branch root..."
           cp -r /tmp/dashboard-deploy/* .
-          
-          # Create a custom 404 page
-          cat > 404.html << 'EOF'
+          # Create a simple 404 page
+          cat > 404.html <<'EOF'
           <!DOCTYPE html>
           <html lang="en">
           <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>404 - Page Not Found</title>
-              <style>
-                  body {
-                      margin: 0;
-                      padding: 0;
-                      font-family: 'Roboto', sans-serif;
-                      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                      color: #fff;
-                      display: flex;
-                      justify-content: center;
-                      align-items: center;
-                      min-height: 100vh;
-                      text-align: center;
-                  }
-                  .container {
-                      padding: 2rem;
-                  }
-                  h1 {
-                      font-size: 4rem;
-                      margin: 0;
-                      background: linear-gradient(45deg, #00d4ff, #0096ff);
-                      -webkit-background-clip: text;
-                      -webkit-text-fill-color: transparent;
-                  }
-                  p {
-                      font-size: 1.2rem;
-                      color: #aaa;
-                  }
-                  a {
-                      display: inline-block;
-                      margin-top: 2rem;
-                      padding: 1rem 2rem;
-                      color: #fff;
-                      background: linear-gradient(45deg, #0096ff, #00d4ff);
-                      text-decoration: none;
-                      border-radius: 8px;
-                      transition: transform 0.2s;
-                  }
-                  a:hover {
-                      transform: translateY(-2px);
-                  }
-              </style>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>404 - Page Not Found</title>
           </head>
           <body>
-              <div class="container">
-                  <h1>404</h1>
-                  <p>Page not found</p>
-                  <a href="/">Return to Dashboard</a>
-              </div>
+            <h1>404</h1>
+            <p>Page not found</p>
+            <a href="/">Return to Dashboard</a>
           </body>
           </html>
           EOF
-          
-          # Create README for the pages branch
-          cat > README.md << 'EOF'
+          # Create a README
+          cat > README.md <<'EOF'
           # PR-SJU Dashboard
           
           This is the deployed GitHub Pages site for the PR-SJU Dashboard.
           
           **Live Site:** https://pr-cybr.github.io/PR-SJU/
           
-          ## About
-          
-          The PR-SJU Dashboard is a multi-profile ham radio and emergency operations dashboard for the San Juan Division of PR-CYBR. It features:
-          
-          - 7 specialized operational profiles
-          - Real-time weather and space weather monitoring
-          - Dark/Light mode toggle
-          - Mobile-responsive design
-          
-          ## Profiles
-          
-          - **TOCOPS** - Tactical Operations Center
-          - **PR-DIV** - Puerto Rico Division
-          - **WATCHDOGS** - Monitoring Operations
-          - **INTEL-HUB** - Intelligence Hub
-          - **PR-SRN** - San Juan Radio Network
-          - **PR-M3SH** - Mesh Network
-          - **PR-SPOT** - Satellite & Space Weather
-          
           ## Source
           
           Source code: https://github.com/PR-CYBR/PR-SJU
           EOF
-          
           echo "Dashboard files copied to pages branch root"
           ls -la
           
       - name: Commit and push to pages branch
         run: |
           git add .
-          
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Deploy dashboard from prod branch [automated]"
+            git commit -m "Deploy dashboard from main branch [automated]"
             git push origin pages
             echo "✅ Dashboard deployed successfully to pages branch!"
           fi
