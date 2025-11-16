@@ -52,6 +52,7 @@ terraform.rc
 /bin/
 /.next/
 /.nuxt/
+/_site/
 
 # Dependency directories (add more as needed for your stack)
 /node_modules/
